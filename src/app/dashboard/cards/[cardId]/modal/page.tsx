@@ -8,6 +8,10 @@ interface Card {
   expiredAt: string;
 }
 
+interface Params {
+  cardId: string;
+}
+
 async function fetchCard(cardId: string): Promise<Card> {
   const response = await axios.get(`/cards/${cardId}`);
   return response.data;
@@ -16,13 +20,14 @@ async function fetchCard(cardId: string): Promise<Card> {
 export default async function CardModal({
   params,
 }: {
-  params: { cardId: string };
+  params: Promise<Params>;
 }) {
+  const { cardId } = await params; // Giải quyết params để lấy cardId
   let card: Card | null = null;
   let error: string | null = null;
 
   try {
-    card = await fetchCard(params.cardId);
+    card = await fetchCard(cardId);
   } catch (err: unknown) {
     let errorMessage = "Lỗi khi tải chi tiết thẻ: ";
     if (isAxiosError(err)) {
