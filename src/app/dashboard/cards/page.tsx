@@ -1,11 +1,11 @@
-import axios from "@/lib/axios";
+import axios, { AxiosError } from "@/lib/axios"; // Import AxiosError
 
 interface Card {
   id: string;
   code: string;
   value: number;
   remaining: number;
-  expiredAt: string;
+  expiredAt: string; // Đã sửa từ 'expireAt' thành 'expiredAt'
 }
 
 async function fetchCards(): Promise<Card[]> {
@@ -19,8 +19,11 @@ export default async function CardsPage() {
 
   try {
     cards = await fetchCards();
-  } catch (err: any) {
-    error = "Lỗi khi tải danh sách thẻ: " + err.message;
+  } catch (err: AxiosError) {
+    // Thay 'any' bằng 'AxiosError'
+    error =
+      "Lỗi khi tải danh sách thẻ: " +
+      (err.response?.data?.message || err.message);
   }
 
   if (error) return <div className="text-red-500">{error}</div>;

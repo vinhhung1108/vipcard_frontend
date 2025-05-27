@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import axios from "@/lib/axios";
+import axios, { AxiosError } from "@/lib/axios"; // Import AxiosError
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -14,8 +14,11 @@ export default function LoginPage() {
       const token = response.data.token;
       document.cookie = `token=${token}; path=/; Secure; SameSite=Strict`;
       window.location.href = "/dashboard";
-    } catch (err: any) {
-      setError("Đăng nhập thất bại: " + err.message);
+    } catch (err: AxiosError) {
+      // Thay 'any' bằng 'AxiosError'
+      setError(
+        "Đăng nhập thất bại: " + (err.response?.data?.message || err.message)
+      );
     }
   };
 

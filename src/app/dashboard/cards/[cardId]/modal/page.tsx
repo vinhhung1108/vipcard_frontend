@@ -1,11 +1,11 @@
-import axios from "@/lib/axios";
+import axios, { AxiosError } from "@/lib/axios"; // Import AxiosError
 
 interface Card {
   id: string;
   code: string;
   value: number;
   remaining: number;
-  expireAt: string;
+  expiredAt: string; // Đã sửa từ 'expireAt' thành 'expiredAt'
 }
 
 async function fetchCard(cardId: string): Promise<Card> {
@@ -23,8 +23,11 @@ export default async function CardModal({
 
   try {
     card = await fetchCard(params.cardId);
-  } catch (err: any) {
-    error = "Lỗi khi tải chi tiết thẻ: " + err.message;
+  } catch (err: AxiosError) {
+    // Thay 'any' bằng 'AxiosError'
+    error =
+      "Lỗi khi tải chi tiết thẻ: " +
+      (err.response?.data?.message || err.message);
   }
 
   if (error) return <div className="text-red-500">{error}</div>;
@@ -44,7 +47,7 @@ export default async function CardModal({
           <strong>Còn lại:</strong> {card.remaining}
         </p>
         <p>
-          <strong>Hết hạn:</strong> {card.expireAt}
+          <strong>Hết hạn:</strong> {card.expiredAt}
         </p>
         <a
           href="/dashboard/cards"
