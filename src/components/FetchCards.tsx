@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react"; // Chỉ giữ useEffect
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
 
 interface Card {
@@ -11,7 +11,7 @@ interface Card {
 }
 
 interface FetchCardsProps {
-  onDataAction: (cards: Card[] | null, error: string | null) => void; // Đổi onData thành onDataAction
+  onDataAction: (cards: Card[] | null, error: string | null) => void;
 }
 
 export default function FetchCards({ onDataAction }: FetchCardsProps) {
@@ -35,5 +35,5 @@ export default function FetchCards({ onDataAction }: FetchCardsProps) {
     fetchCards();
   }, [onDataAction]);
 
-  return null; // Không render gì, chỉ gọi API
+  return null;
 }
