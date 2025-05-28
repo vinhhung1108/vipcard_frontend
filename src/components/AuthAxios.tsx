@@ -11,12 +11,21 @@ const authAxios = axios.create({
 
 authAxios.interceptors.request.use(
   (config) => {
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1];
+    const cookies = document.cookie.split("; ");
+    let token = null;
+    for (const cookie of cookies) {
+      const [name, value] = cookie.split("=");
+      if (name === "token") {
+        token = value;
+        break; // Lấy token đầu tiên (sau khi đã xóa token cũ)
+      }
+    }
+    console.log("Token from cookie:", token); // Debug
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("Authorization header set:", config.headers.Authorization);
+    } else {
+      console.log("No token found in cookie");
     }
     return config;
   },

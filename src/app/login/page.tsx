@@ -9,35 +9,37 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
+
     try {
-      console.log("Đang gọi API /auth/login với dữ liệu:", { email, password });
-      const response = await axios.post("/auth/login", { email, password }); // Sử dụng email
-      console.log("Response từ API:", response.data);
-      const token = response.data.access_token; // Có thể thay bằng access_token nếu API trả về khác
+      // Xóa cookie token cũ
+      document.cookie = "token=; Max-Age=0; path=/";
+
+      const response = await axios.post(
+        "https://apicard.namident.com/auth/login",
+        {
+          email,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      const token = response.data.access_token;
       if (!token) {
-        throw new Error("Không tìm thấy token trong response");
+        throw new Error("Không tìm thấy access_token trong response");
       }
-      document.cookie = `token=${token}; path=/; Secure; SameSite=Strict`;
-      console.log("Token đã được lưu vào cookie:", token);
-      router.push("/dashboard");
-    } catch (err: unknown) {
-      let errorMessage = "Đăng nhập thất bại: ";
-      if (isAxiosError(err)) {
-        errorMessage +=
-          err.response?.data?.message || err.message || "Lỗi không xác định";
-        console.error("Lỗi từ API:", {
-          status: err.response?.status,
-          data: err.response?.data,
-          message: err.message,
-        });
-      } else {
-        errorMessage += (err as Error).message || "Lỗi không xác định";
-        console.error("Lỗi không phải từ API:", err);
-      }
-      setError(errorMessage);
+
+      // Lưu cookie mới
+      document.cookie = `token=${token}; path=/; Secure; SameSite=Lax; Max-Age=${
+        60 * 60 * 24
+      }`; // 24 giờ
+      router.push("/dashboard/cards");
+    } catch (err) {
+      setError("Đăng nhập thất bại: " + (err as Error).message);
     }
   };
 
