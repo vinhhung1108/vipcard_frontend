@@ -1,76 +1,65 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import axios, { isAxiosError } from "@/lib/axios";
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import axios from 'axios'; // Chỉ giữ axios
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState(""); // Thay username thành email
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
     try {
-      // Xóa cookie token cũ
-      document.cookie = "token=; Max-Age=0; path=/";
-
-      const response = await axios.post(
-        "https://apicard.namident.com/auth/login",
-        {
-          email,
-          password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      document.cookie = 'token=; Max-Age=0; path=/'; // Xóa cookie cũ
+      const response = await axios.post('https://apicard.namident.com/auth/login', {
+        email,
+        password,
+      }, {
+        withCredentials: true,
+      });
 
       const token = response.data.access_token;
       if (!token) {
-        throw new Error("Không tìm thấy access_token trong response");
+        throw new Error('Không tìm thấy access_token trong response');
       }
 
-      // Lưu cookie mới
-      document.cookie = `token=${token}; path=/; Secure; SameSite=Lax; Max-Age=${
-        60 * 60 * 24
-      }`; // 24 giờ
-      router.push("/dashboard/cards");
+      document.cookie = `token=${token}; path=/; Secure; SameSite=Lax; Max-Age=${60 * 60 * 24}`;
+      router.push('/dashboard/cards');
     } catch (err) {
-      setError("Đăng nhập thất bại: " + (err as Error).message);
+      setError('Đăng nhập thất bại: ' + (err as Error).message);
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-background">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow-lg w-96"
-      >
-        <h2 className="text-2xl mb-4 text-foreground">Đăng nhập</h2>
+    <div className="flex items-center justify-center min-h-screen">
+      <form onSubmit={handleSubmit} className="p-6 bg-white rounded shadow-md">
+        <h1 className="text-2xl font-bold mb-4">Đăng nhập</h1>
+        <div className="mb-4">
+          <label className="block mb-1">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Mật khẩu</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <input
-          type="email" // Thay type="text" thành type="email"
-          placeholder="Email" // Thay "Tên đăng nhập" thành "Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="p-2 border rounded w-full mb-4"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Mật khẩu"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="p-2 border rounded w-full mb-4"
-          required
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white p-2 rounded w-full"
-        >
+        <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded">
           Đăng nhập
         </button>
       </form>
