@@ -1,4 +1,7 @@
-import { authAxios, isAxiosError } from "@/components/AuthAxios";
+"use client";
+import { useState } from "react";
+import FetchCards from "@/components/FetchCards";
+
 interface Card {
   id: string;
   code: string;
@@ -7,64 +10,62 @@ interface Card {
   expiredAt: string;
 }
 
-async function fetchCards(): Promise<Card[]> {
-  const response = await authAxios.get("/cards");
-  return response.data;
-}
+export default function CardsPage() {
+  const [cards, setCards] = useState<Card[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-export default async function CardsPage() {
-  let cards: Card[] = [];
-  let error: string | null = null;
-
-  try {
-    cards = await fetchCards();
-  } catch (err: unknown) {
-    let errorMessage = "Lỗi khi tải danh sách thẻ: ";
-    if (isAxiosError(err)) {
-      // Sẽ lỗi vì isAxiosError không được import
-      errorMessage +=
-        err.response?.data?.message || err.message || "Lỗi không xác định";
-    } else {
-      errorMessage += (err as Error).message || "Lỗi không xác định";
-    }
-    error = errorMessage;
-  }
-
-  if (error) return <div className="text-red-500">{error}</div>;
-  if (!cards)
-    return <div className="animate-pulse text-foreground">Đang tải...</div>;
-  if (!cards.length) return <div>Không có thẻ nào</div>;
+  const handleData = (
+    fetchedCards: Card[] | null,
+    fetchedError: string | null
+  ) => {
+    setCards(fetchedCards);
+    setError(fetchedError);
+  };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-foreground">Danh sách thẻ</h1>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            <th className="border p-2">Mã thẻ</th>
-            <th className="border p-2">Giá trị</th>
-            <th className="border p-2">Còn lại</th>
-            <th className="border p-2">Hết hạn</th>
-          </tr>
-        </thead>
-        <tbody>
-          {cards.map((card) => (
-            <tr key={card.id}>
-              <td className="border p-2">
-                <a
-                  href={`/dashboard/cards/${card.id}/modal`}
-                  className="text-blue-500"
-                >
-                  {card.code}
-                </a>
-              </td>
-              <td className="border p-2">{card.value}</td>
-              <td className="border p-2">{card.remaining}</td>
-              <td className="border p-2">{card.expiredAt}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <FetchCards onDataAction={handleData} />{" "}
+      {/* Đổi onData thành onDataAction */}
+      {error ? (
+        <div className="text-red-500">{error}</div>
+      ) : !cards ? (
+        <div className="animate-pulse text-foreground">Đang tải...</div>
+      ) : cards.length === 0 ? (
+        <div>Không có thẻ nào</div>
+      ) : (
+        <>
+          <h1 className="text-2xl font-bold mb-4 text-foreground">
+            Danh sách thẻ
+          </h1>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border p-2">Mã thẻ</th>
+                <th className="border p-2">Giá trị</th>
+                <th className="border p-2">Còn lại</th>
+                <th className="border p-2">Hết hạn</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cards.map((card) => (
+                <tr key={card.id}>
+                  <td className="border p-2">
+                    <a
+                      href={`/dashboard/cards/${card.id}/modal`}
+                      className="text-blue-500"
+                    >
+                      {card.code}
+                    </a>
+                  </td>
+                  <td className="border p-2">{card.value}</td>
+                  <td className="border p-2">{card.remaining}</td>
+                  <td className="border p-2">{card.expiredAt}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
     </div>
   );
 }
