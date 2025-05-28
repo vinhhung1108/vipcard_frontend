@@ -1,5 +1,4 @@
-import axios, { isAxiosError } from "@/lib/axios";
-
+import { authAxios, isAxiosError } from "@/components/AuthAxios";
 interface Card {
   id: string;
   code: string;
@@ -9,7 +8,7 @@ interface Card {
 }
 
 async function fetchCards(): Promise<Card[]> {
-  const response = await axios.get("/cards");
+  const response = await authAxios.get("/cards");
   return response.data;
 }
 
@@ -20,9 +19,9 @@ export default async function CardsPage() {
   try {
     cards = await fetchCards();
   } catch (err: unknown) {
-    // Định nghĩa kiểu là 'unknown'
     let errorMessage = "Lỗi khi tải danh sách thẻ: ";
     if (isAxiosError(err)) {
+      // Sẽ lỗi vì isAxiosError không được import
       errorMessage +=
         err.response?.data?.message || err.message || "Lỗi không xác định";
     } else {

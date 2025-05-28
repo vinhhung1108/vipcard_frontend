@@ -1,5 +1,4 @@
-import axios, { isAxiosError } from "@/lib/axios";
-
+import { authAxios, isAxiosError } from "@/components/AuthAxios";
 interface Card {
   id: string;
   code: string;
@@ -13,7 +12,7 @@ interface Params {
 }
 
 async function fetchCard(cardId: string): Promise<Card> {
-  const response = await axios.get(`/cards/${cardId}`);
+  const response = await authAxios.get(`/cards/${cardId}`); // Sử dụng authAxios
   return response.data;
 }
 
@@ -22,7 +21,7 @@ export default async function CardModal({
 }: {
   params: Promise<Params>;
 }) {
-  const { cardId } = await params; // Giải quyết params để lấy cardId
+  const { cardId } = await params;
   let card: Card | null = null;
   let error: string | null = null;
 
