@@ -13,27 +13,37 @@ interface Card {
 export default function CardsPage() {
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true); // Thêm trạng thái loading
 
   const handleData = useCallback(
-    (fetchedCards: Card[] | null, fetchedError: string | null) => {
+    (
+      fetchedCards: Card[] | null,
+      fetchedError: string | null,
+      isLoading: boolean
+    ) => {
       setCards(fetchedCards);
       setError(fetchedError);
+      setLoading(isLoading); // Cập nhật trạng thái loading
     },
-    [] // Không có dependency vì setCards và setError không thay đổi
+    []
   );
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50">
       <FetchCards onDataAction={handleData} />
-      {error ? (
-        <div className="text-red-500">{error}</div>
+      {loading ? (
+        <div className="animate-pulse text-center text-foreground">
+          Đang tải...
+        </div>
+      ) : error ? (
+        <div className="text-red-500 text-center">{error}</div>
       ) : !cards ? (
-        <div className="animate-pulse text-foreground">Đang tải...</div>
+        <div className="text-center text-foreground">Đang tải...</div>
       ) : cards.length === 0 ? (
-        <div>Không có thẻ nào</div>
+        <div className="text-center text-foreground">Không có thẻ nào</div>
       ) : (
         <>
-          <h1 className="text-2xl font-bold mb-4 text-foreground">
+          <h1 className="text-2xl font-bold mb-4 text-foreground text-center">
             Danh sách thẻ
           </h1>
           <table className="w-full border-collapse">
