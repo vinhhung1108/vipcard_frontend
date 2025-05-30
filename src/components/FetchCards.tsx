@@ -19,14 +19,15 @@ interface FetchCardsProps {
 }
 
 export default function FetchCards({ onDataAction }: FetchCardsProps) {
-  const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [loading, setLoading] = useState(true); // Giữ loading để truyền cho cha
 
   useEffect(() => {
     const fetchCards = async () => {
       setLoading(true);
       try {
         const response = await authAxios.get("/cards");
-        onDataAction(response.data, null, false); // Dữ liệu thành công, loading = false
+        onDataAction(response.data, null, false);
       } catch (err: unknown) {
         let errorMessage = "Lỗi khi tải danh sách thẻ: ";
         if (isAxiosError(err)) {
@@ -35,14 +36,14 @@ export default function FetchCards({ onDataAction }: FetchCardsProps) {
         } else {
           errorMessage += (err as Error).message || "Lỗi không xác định";
         }
-        onDataAction(null, errorMessage, false); // Lỗi, loading = false
+        onDataAction(null, errorMessage, false);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCards();
-  }, []);
+  }, [onDataAction]); // Thêm onDataAction vào mảng phụ thuộc
 
   return null;
 }

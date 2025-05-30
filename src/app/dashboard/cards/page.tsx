@@ -1,5 +1,6 @@
 "use client";
 import { useState, useCallback } from "react";
+import { Spinner } from "@nextui-org/react";
 import FetchCards from "@/components/FetchCards";
 
 interface Card {
@@ -13,7 +14,7 @@ interface Card {
 export default function CardsPage() {
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true); // Thêm trạng thái loading
+  const [loading, setLoading] = useState(true);
 
   const handleData = useCallback(
     (
@@ -23,7 +24,7 @@ export default function CardsPage() {
     ) => {
       setCards(fetchedCards);
       setError(fetchedError);
-      setLoading(isLoading); // Cập nhật trạng thái loading
+      setLoading(isLoading);
     },
     []
   );
@@ -32,13 +33,13 @@ export default function CardsPage() {
     <div className="p-6 bg-gray-50">
       <FetchCards onDataAction={handleData} />
       {loading ? (
-        <div className="animate-pulse text-center text-foreground">
-          Đang tải...
+        <div className="flex justify-center items-center">
+          <Spinner size="lg" color="primary" />
         </div>
       ) : error ? (
         <div className="text-red-500 text-center">{error}</div>
       ) : !cards ? (
-        <div className="text-center text-foreground">Đang tải...</div>
+        <div className="text-center text-foreground">Không có dữ liệu</div>
       ) : cards.length === 0 ? (
         <div className="text-center text-foreground">Không có thẻ nào</div>
       ) : (
