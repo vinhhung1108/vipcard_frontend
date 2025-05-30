@@ -19,7 +19,7 @@ export default function CardModal() {
   const router = useRouter();
   const [card, setCard] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false); // Thêm trạng thái deleting
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchCard = async () => {
@@ -51,11 +51,26 @@ export default function CardModal() {
   const handleDelete = async () => {
     if (confirm("Xác nhận xóa?")) {
       setDeleting(true);
+      setError(null); // Reset error trước khi xóa
       try {
-        await authAxios.delete(`/cards/${cardId}`);
-        router.push("/dashboard/cards");
+        const response = await authAxios.delete(`/cards/${cardId}`);
+        if (response.status === 200 || response.status === 204) {
+          router.push("/dashboard/cards");
+        } else {
+          setError("Xóa thẻ thất bại: Phản hồi không hợp lệ từ server");
+          setDeleting(false);
+        }
       } catch (error) {
-        setError("Lỗi khi xóa thẻ: " + (error as Error).message);
+        let errorMessage = "Lỗi khi xóa thẻ: ";
+        if (isAxiosError(error)) {
+          errorMessage +=
+            error.response?.data?.message ||
+            error.message ||
+            "Lỗi không xác định";
+        } else {
+          errorMessage += (error as Error).message || "Lỗi không xác định";
+        }
+        setError(errorMessage);
         setDeleting(false);
       }
     }
@@ -107,7 +122,7 @@ export default function CardModal() {
             </button>
             <button
               onClick={handleDelete}
-              disabled={deleting} // Vô hiệu hóa nút khi đang xóa
+              disabled={deleting}
               className={`px-4 py-2 bg-red-500 text-white rounded ${
                 deleting ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600"
               }`}
