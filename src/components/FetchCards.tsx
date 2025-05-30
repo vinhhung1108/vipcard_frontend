@@ -5,9 +5,14 @@ import { authAxios, isAxiosError } from "@/components/AuthAxios";
 interface Card {
   id: string;
   code: string;
-  value: number;
-  remaining: number;
+  value: string; // Thay number thành string
+  remainingValue: string; // Thay remaining thành remainingValue và dùng string
   expiredAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  services?: { id: number; name: string; description: string }[];
+  partners?: { id: number; name: string; address: string; phone: string | null; email: string | null }[];
+  referralCode?: { id: number; code: string; description: string };
 }
 
 interface FetchCardsProps {
@@ -19,8 +24,7 @@ interface FetchCardsProps {
 }
 
 export default function FetchCards({ onDataAction }: FetchCardsProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [loading, setLoading] = useState(true); // Giữ loading để truyền cho cha
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -43,7 +47,7 @@ export default function FetchCards({ onDataAction }: FetchCardsProps) {
     };
 
     fetchCards();
-  }, [onDataAction]); // Thêm onDataAction vào mảng phụ thuộc
+  }, [onDataAction]);
 
   return null;
 }

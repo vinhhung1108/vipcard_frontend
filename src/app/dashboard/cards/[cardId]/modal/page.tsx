@@ -9,9 +9,20 @@ import { authAxios, isAxiosError } from "@/components/AuthAxios";
 interface Card {
   id: string;
   code: string;
-  value?: number;
-  remaining?: number;
+  value: string;
+  remainingValue: string;
   expiredAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  services?: { id: number; name: string; description: string }[];
+  partners?: {
+    id: number;
+    name: string;
+    address: string;
+    phone: string | null;
+    email: string | null;
+  }[];
+  referralCode?: { id: number; code: string; description: string };
 }
 
 export default function CardModal() {
@@ -47,11 +58,19 @@ export default function CardModal() {
   const formattedExpiredAt = card
     ? format(new Date(card.expiredAt), "dd/MM/yyyy HH:mm:ss", { locale: vi })
     : null;
+  const formattedCreatedAt =
+    card && card.createdAt
+      ? format(new Date(card.createdAt), "dd/MM/yyyy HH:mm:ss", { locale: vi })
+      : null;
+  const formattedUpdatedAt =
+    card && card.updatedAt
+      ? format(new Date(card.updatedAt), "dd/MM/yyyy HH:mm:ss", { locale: vi })
+      : null;
 
   const handleDelete = async () => {
     if (confirm("Xác nhận xóa?")) {
       setDeleting(true);
-      setError(null); // Reset error trước khi xóa
+      setError(null);
       try {
         const response = await authAxios.delete(`/cards/${cardId}`);
         if (response.status === 200 || response.status === 204) {
@@ -102,16 +121,56 @@ export default function CardModal() {
               <strong>Mã thẻ:</strong> {card.code || "Không có"}
             </p>
             <p>
-              <strong>Giá trị:</strong> {card.value?.toLocaleString() ?? "0"}{" "}
+              <strong>Giá trị:</strong> {Number(card.value).toLocaleString()}{" "}
               VNĐ
             </p>
             <p>
               <strong>Còn lại:</strong>{" "}
-              {card.remaining?.toLocaleString() ?? "0"} VNĐ
+              {Number(card.remainingValue).toLocaleString()} VNĐ
             </p>
             <p>
               <strong>Hết hạn:</strong> {formattedExpiredAt || "Không có"}
             </p>
+            {formattedCreatedAt && (
+              <p>
+                <strong>Ngày tạo:</strong> {formattedCreatedAt}
+              </p>
+            )}
+            {formattedUpdatedAt && (
+              <p>
+                <strong>Ngày cập nhật:</strong> {formattedUpdatedAt}
+              </p>
+            )}
+            {card.services && card.services.length > 0 && (
+              <div>
+                <strong>Dịch vụ:</strong>
+                <ul className="list-disc pl-5">
+                  {card.services.map((service) => (
+                    <li key={service.id}>
+                      {service.name}: {service.description}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {card.partners && card.partners.length > 0 && (
+              <div>
+                <strong>Đối tác:</strong>
+                <ul className="list-disc pl-5">
+                  {card.partners.map((partner) => (
+                    <li key={partner.id}>
+                      {partner.name} - {partner.address}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {card.referralCode && (
+              <p>
+                <strong>Mã giới thiệu:</strong> {card.referralCode.code} (
+                {card.referralCode.description})
+              </p>
+            )}
           </div>
           <div className="mt-4 flex justify-end space-x-2">
             <button
