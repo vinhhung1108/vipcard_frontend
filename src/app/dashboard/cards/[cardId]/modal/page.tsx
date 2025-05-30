@@ -9,8 +9,8 @@ import { authAxios, isAxiosError } from "@/components/AuthAxios";
 interface Card {
   id: string;
   code: string;
-  value: number;
-  remaining: number;
+  value?: number; // Thêm optional để xử lý trường hợp thiếu
+  remaining?: number; // Thêm optional để xử lý trường hợp thiếu
   expiredAt: string;
 }
 
@@ -24,7 +24,12 @@ export default function CardModal() {
     const fetchCard = async () => {
       try {
         const response = await authAxios.get(`/cards/${cardId}`);
-        setCard(response.data);
+        // Kiểm tra dữ liệu trước khi setCard
+        if (response.data && typeof response.data === "object") {
+          setCard(response.data as Card);
+        } else {
+          setError("Dữ liệu thẻ không hợp lệ từ API");
+        }
       } catch (err: unknown) {
         let errorMessage = "Lỗi khi tải chi tiết thẻ: ";
         if (isAxiosError(err)) {
@@ -66,16 +71,18 @@ export default function CardModal() {
           </h2>
           <div className="space-y-2">
             <p>
-              <strong>Mã thẻ:</strong> {card.code}
+              <strong>Mã thẻ:</strong> {card.code || "Không có"}
             </p>
             <p>
-              <strong>Giá trị:</strong> {card.value.toLocaleString()} VNĐ
+              <strong>Giá trị:</strong> {card.value?.toLocaleString() ?? "0"}{" "}
+              VNĐ
             </p>
             <p>
-              <strong>Còn lại:</strong> {card.remaining.toLocaleString()} VNĐ
+              <strong>Còn lại:</strong>{" "}
+              {card.remaining?.toLocaleString() ?? "0"} VNĐ
             </p>
             <p>
-              <strong>Hết hạn:</strong> {formattedExpiredAt}
+              <strong>Hết hạn:</strong> {formattedExpiredAt || "Không có"}
             </p>
           </div>
           <div className="mt-4 flex justify-end space-x-2">
