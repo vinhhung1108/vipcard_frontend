@@ -9,8 +9,8 @@ import { authAxios, isAxiosError } from "@/components/AuthAxios";
 interface Card {
   id: string;
   code: string;
-  value?: number; // Thêm optional để xử lý trường hợp thiếu
-  remaining?: number; // Thêm optional để xử lý trường hợp thiếu
+  value?: number;
+  remaining?: number;
   expiredAt: string;
 }
 
@@ -19,12 +19,12 @@ export default function CardModal() {
   const router = useRouter();
   const [card, setCard] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false); // Thêm trạng thái deleting
 
   useEffect(() => {
     const fetchCard = async () => {
       try {
         const response = await authAxios.get(`/cards/${cardId}`);
-        // Kiểm tra dữ liệu trước khi setCard
         if (response.data && typeof response.data === "object") {
           setCard(response.data as Card);
         } else {
@@ -47,6 +47,19 @@ export default function CardModal() {
   const formattedExpiredAt = card
     ? format(new Date(card.expiredAt), "dd/MM/yyyy HH:mm:ss", { locale: vi })
     : null;
+
+  const handleDelete = async () => {
+    if (confirm("Xác nhận xóa?")) {
+      setDeleting(true);
+      try {
+        await authAxios.delete(`/cards/${cardId}`);
+        router.push("/dashboard/cards");
+      } catch (error) {
+        setError("Lỗi khi xóa thẻ: " + (error as Error).message);
+        setDeleting(false);
+      }
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -93,12 +106,13 @@ export default function CardModal() {
               Chỉnh sửa
             </button>
             <button
-              onClick={() => {
-                if (confirm("Xác nhận xóa?")) router.push("/dashboard/cards");
-              }}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              onClick={handleDelete}
+              disabled={deleting} // Vô hiệu hóa nút khi đang xóa
+              className={`px-4 py-2 bg-red-500 text-white rounded ${
+                deleting ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600"
+              }`}
             >
-              Xóa
+              {deleting ? <Spinner size="sm" color="white" /> : "Xóa"}
             </button>
             <button
               onClick={() => router.back()}
