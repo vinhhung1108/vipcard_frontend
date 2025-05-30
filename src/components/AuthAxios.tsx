@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const authAxios = axios.create({
-  baseURL: "https://apicard.namident.com",
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
 });
 
@@ -23,7 +23,6 @@ if (!isInterceptorAttached) {
       }
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        // Chỉ log trong môi trường development nếu cần
         if (process.env.NODE_ENV === "development") {
           console.log(
             "Authorization header set:",
