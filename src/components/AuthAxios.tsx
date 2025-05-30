@@ -1,47 +1,41 @@
-"use client";
-import axios, { isAxiosError, AxiosInstance } from "axios"; // Import isAxiosError từ axios
+import axios from "axios";
 
-const authAxios = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://apicard.namident.com",
-  headers: {
-    "Content-Type": "application/json",
-  },
+export const authAxios = axios.create({
+  baseURL: "https://apicard.namident.com",
   withCredentials: true,
 });
 
-authAxios.interceptors.request.use(
-  (config) => {
-    const cookies = document.cookie.split("; ");
-    let token = null;
-    for (const cookie of cookies) {
-      const [name, value] = cookie.split("=");
-      if (name === "token") {
-        token = value;
-        break; // Lấy token đầu tiên (sau khi đã xóa token cũ)
+export const isAxiosError = axios.isAxiosError;
+
+let isInterceptorAttached = false;
+
+if (!isInterceptorAttached) {
+  authAxios.interceptors.request.use(
+    (config) => {
+      const cookies = document.cookie.split("; ");
+      let token = null;
+      for (const cookie of cookies) {
+        const [name, value] = cookie.split("=");
+        if (name === "token") {
+          token = value;
+          break;
+        }
       }
-    }
-    console.log("Token from cookie:", token); // Debug
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log("Authorization header set:", config.headers.Authorization);
-    } else {
-      console.log("No token found in cookie");
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        // Chỉ log trong môi trường development nếu cần
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            "Authorization header set:",
+            config.headers.Authorization
+          );
+        }
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+  isInterceptorAttached = true;
+}
 
-authAxios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error(
-      "API Error:",
-      isAxiosError(error) ? error.response?.data : error.message
-    );
-    return Promise.reject(error);
-  }
-);
-
-export { authAxios, isAxiosError }; // Export cả authAxios và isAxiosError
-export type { AxiosInstance }; // Export AxiosInstance để sử dụng nếu cần
+export default authAxios;

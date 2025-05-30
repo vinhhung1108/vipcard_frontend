@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react"; // Chỉ giữ useEffect
+import { useEffect } from "react";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
 
 interface Card {
@@ -33,7 +33,7 @@ export default function FetchCards({ onDataAction }: FetchCardsProps) {
     };
 
     fetchCards();
-  }, [onDataAction]);
+  }, []); // Loại bỏ dependency [onDataAction]
 
   return null;
 }

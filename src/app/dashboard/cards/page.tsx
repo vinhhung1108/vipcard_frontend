@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import FetchCards from "@/components/FetchCards";
 
 interface Card {
@@ -14,18 +14,17 @@ export default function CardsPage() {
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleData = (
-    fetchedCards: Card[] | null,
-    fetchedError: string | null
-  ) => {
-    setCards(fetchedCards);
-    setError(fetchedError);
-  };
+  const handleData = useCallback(
+    (fetchedCards: Card[] | null, fetchedError: string | null) => {
+      setCards(fetchedCards);
+      setError(fetchedError);
+    },
+    [] // Không có dependency vì setCards và setError không thay đổi
+  );
 
   return (
     <div className="p-6">
-      <FetchCards onDataAction={handleData} />{" "}
-      {/* Đổi onData thành onDataAction */}
+      <FetchCards onDataAction={handleData} />
       {error ? (
         <div className="text-red-500">{error}</div>
       ) : !cards ? (
