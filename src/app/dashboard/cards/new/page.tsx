@@ -38,23 +38,25 @@ export default function NewCardPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loadingData, setLoadingData] = useState(true); // Trạng thái tải dữ liệu API
 
-  // Fetch dữ liệu từ API
+  // Fetch dữ liệu từ API sử dụng authAxios
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [servicesResponse, partnersResponse] = await Promise.all([
-          fetch("https://apicard.namident.com/services"),
-          fetch("https://apicard.namident.com/partners"),
+          authAxios.get("https://apicard.namident.com/services"),
+          authAxios.get("https://apicard.namident.com/partners"),
         ]);
-        const servicesData = await servicesResponse.json();
-        const partnersData = await partnersResponse.json();
-        setServices(servicesData);
-        setPartners(partnersData);
+        setServices(servicesResponse.data); // Giả định data là mảng
+        setPartners(partnersResponse.data); // Giả định data là mảng
       } catch (err) {
-        setError(
-          "Lỗi khi tải danh sách dịch vụ hoặc đối tác: " +
-            (err as Error).message
-        );
+        let errMessage = "Lỗi khi tải danh sách: ";
+        if (isAxiosError(err)) {
+          errMessage +=
+            err.response?.data?.message || err.message || "Lỗi không xác định";
+        } else {
+          errMessage += (err as Error).message || "Lỗi không xác định";
+        }
+        setError(errMessage);
       } finally {
         setLoadingData(false);
       }
@@ -72,7 +74,7 @@ export default function NewCardPage() {
 
   const handleSelectChange = useCallback(
     (name: string, selectedKeys: Set<string>) => {
-      const values = Array.from(selectedKeys).map(Number); // Chuyển thành mảng số
+      const values = Array.from(selectedKeys).map(Number);
       setFormData((prev) => ({ ...prev, [name]: values }));
     },
     []
@@ -82,7 +84,6 @@ export default function NewCardPage() {
     setLoading(true);
     setError(null);
 
-    // Validate dữ liệu
     if (
       !formData.code ||
       !formData.value ||
@@ -113,7 +114,6 @@ export default function NewCardPage() {
     }
 
     try {
-      // Chuyển đổi dữ liệu trước khi gửi
       const payload = {
         code: formData.code,
         value: Number(formData.value),
