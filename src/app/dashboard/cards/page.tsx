@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@nextui-org/react";
 import FetchCards from "@/components/FetchCards";
-import { format } from "date-fns";
+import { format } from "date-fns"; // Thêm date-fns
 import { vi } from "date-fns/locale";
 
 interface Card {
@@ -29,7 +29,7 @@ export default function CardsPage() {
   const router = useRouter();
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false); // Thêm state loading từ FetchCards
+  const [loading, setLoading] = useState(true);
 
   const handleData = useCallback(
     (
@@ -39,21 +39,14 @@ export default function CardsPage() {
     ) => {
       setCards(fetchedCards);
       setError(fetchedError);
-      setLoading(isLoading); // Cập nhật loading từ onDataAction
+      setLoading(isLoading);
     },
     []
   );
 
-  const handleLoadingChange = useCallback((isLoading: boolean) => {
-    setLoading(isLoading); // Cập nhật loading từ onLoadingChange
-  }, []);
-
   return (
     <div className="p-6 bg-gray-50">
-      <FetchCards
-        onDataAction={handleData}
-        onLoadingChange={handleLoadingChange} // Truyền prop mới
-      />
+      <FetchCards onDataAction={handleData} />
       {loading ? (
         <div className="flex justify-center items-center">
           <Spinner size="lg" color="primary" />

@@ -5,8 +5,8 @@ import { authAxios, isAxiosError } from "@/components/AuthAxios";
 interface Card {
   id: string;
   code: string;
-  value: string;
-  remainingValue: string;
+  value: string; // Thay number thành string
+  remainingValue: string; // Thay remaining thành remainingValue và dùng string
   expiredAt: string;
   createdAt?: string;
   updatedAt?: string;
@@ -27,22 +27,18 @@ interface FetchCardsProps {
     error: string | null,
     loading: boolean
   ) => void;
-  onLoadingChange: (loading: boolean) => void; // Thêm prop mới
 }
 
-export default function FetchCards({
-  onDataAction,
-  onLoadingChange,
-}: FetchCardsProps) {
-  const [loading, setLoading] = useState(true); // Giữ lại useState
+export default function FetchCards({ onDataAction }: FetchCardsProps) {
+  //eslint disable-next-line @typescript-eslint/no-unused-vars
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCards = async () => {
-      setLoading(true); // Cập nhật loading khi bắt đầu
-      onLoadingChange(true); // Truyền trạng thái loading lên cha
+      setLoading(true);
       try {
         const response = await authAxios.get("/cards");
-        onDataAction(response.data, null, true); // Truyền loading trong onDataAction
+        onDataAction(response.data, null, false);
       } catch (err: unknown) {
         let errorMessage = "Lỗi khi tải danh sách thẻ: ";
         if (isAxiosError(err)) {
@@ -51,15 +47,14 @@ export default function FetchCards({
         } else {
           errorMessage += (err as Error).message || "Lỗi không xác định";
         }
-        onDataAction(null, errorMessage, true); // Truyền loading trong onDataAction
+        onDataAction(null, errorMessage, false);
       } finally {
-        setLoading(false); // Cập nhật loading khi hoàn tất
-        onLoadingChange(false); // Truyền trạng thái loading lên cha
+        setLoading(false);
       }
     };
 
     fetchCards();
-  }, [onDataAction, onLoadingChange]);
+  }, [onDataAction]);
 
   return null;
 }
