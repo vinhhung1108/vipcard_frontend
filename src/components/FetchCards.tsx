@@ -27,7 +27,7 @@ interface FetchCardsProps {
     error: string | null,
     loading: boolean
   ) => void;
-  onLoadingChangeAction: (loading: boolean) => void; // Đổi tên thành onLoadingChangeAction
+  onLoadingChangeAction: (loading: boolean) => void; // Đảm bảo tên đúng
 }
 
 export default function FetchCards({
@@ -39,7 +39,7 @@ export default function FetchCards({
   useEffect(() => {
     const fetchCards = async () => {
       setLoading(true);
-      onLoadingChangeAction(true); // Sử dụng tên mới
+      onLoadingChangeAction(true);
       try {
         const response = await authAxios.get("/cards");
         onDataAction(response.data, null, false);
@@ -54,7 +54,7 @@ export default function FetchCards({
         onDataAction(null, errorMessage, false);
       } finally {
         setLoading(false);
-        onLoadingChangeAction(false); // Sử dụng tên mới
+        onLoadingChangeAction(false);
       }
     };
 

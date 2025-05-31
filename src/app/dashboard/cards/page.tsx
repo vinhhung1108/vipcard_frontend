@@ -45,14 +45,14 @@ export default function CardsPage() {
   );
 
   const handleLoadingChangeAction = useCallback((isLoading: boolean) => {
-    setLoading(isLoading); // Cập nhật loading từ FetchCards
+    setLoading(isLoading);
   }, []);
 
   return (
     <div className="p-6 bg-gray-50">
       <FetchCards
         onDataAction={handleData}
-        onLoadingChangeAction={handleLoadingChangeAction} // Đổi tên prop
+        onLoadingChangeAction={handleLoadingChangeAction} // Sử dụng tên mới
       />
       {loading ? (
         <div className="flex justify-center items-center">
