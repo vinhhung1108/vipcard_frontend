@@ -1,6 +1,7 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
+import { AxiosError } from "axios"; // Import AxiosError để kiểu hóa
 
 interface Card {
   id: string;
@@ -34,6 +35,8 @@ export default function FetchCards({
   onDataAction,
   onLoadingChangeAction,
 }: FetchCardsProps) {
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchCards = async () => {
       onLoadingChangeAction(true); // Truyền trạng thái loading lên cha
@@ -41,14 +44,18 @@ export default function FetchCards({
         const response = await authAxios.get("/cards");
         onDataAction(response.data, null, false);
       } catch (err: unknown) {
-        let errorMessage = "Lỗi khi tải danh sách thẻ: ";
+        let errMessage = "Lỗi khi tải danh sách: ";
         if (isAxiosError(err)) {
-          errorMessage +=
-            err.response?.data?.message || err.message || "Lỗi không xác định";
+          const axiosError = err as AxiosError<{ message?: string }>; // Ép kiểu với message tùy chọn
+          errMessage +=
+            (axiosError.response?.data?.message as string | undefined) ||
+            axiosError.message ||
+            "Lỗi không xác định";
         } else {
-          errorMessage += (err as Error).message || "Lỗi không xác định";
+          errMessage += (err as Error).message || "Lỗi không xác định";
         }
-        onDataAction(null, errorMessage, false);
+        setError(errMessage);
+        onDataAction(null, errMessage, false);
       } finally {
         onLoadingChangeAction(false); // Truyền trạng thái loading lên cha
       }

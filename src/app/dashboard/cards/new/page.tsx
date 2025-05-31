@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
+import { AxiosError } from "axios"; // Thêm import AxiosError
 
 interface Card {
   code: string;
@@ -51,8 +52,11 @@ export default function NewCardPage() {
       } catch (err) {
         let errMessage = "Lỗi khi tải danh sách: ";
         if (isAxiosError(err)) {
+          const axiosError = err as AxiosError<{ message?: string }>; // Ép kiểu với message tùy chọn
           errMessage +=
-            err.response?.data?.message || err.message || "Lỗi không xác định";
+            (axiosError.response?.data?.message as string | undefined) ||
+            axiosError.message ||
+            "Lỗi không xác định";
         } else {
           errMessage += (err as Error).message || "Lỗi không xác định";
         }
@@ -130,8 +134,11 @@ export default function NewCardPage() {
     } catch (err: unknown) {
       let errMessage = "Lỗi khi tạo thẻ: ";
       if (isAxiosError(err)) {
+        const axiosError = err as AxiosError<{ message?: string }>; // Ép kiểu với message tùy chọn
         errMessage +=
-          err.response?.data?.message || err.message || "Lỗi không xác định";
+          (axiosError.response?.data?.message as string | undefined) ||
+          axiosError.message ||
+          "Lỗi không xác định";
       } else {
         errMessage += (err as Error).message || "Lỗi không xác định";
       }

@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Spinner } from "@nextui-org/react";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
+import { AxiosError } from "axios"; // Import AxiosError để kiểu hóa
 
 interface Card {
   id: string;
@@ -44,8 +45,11 @@ export default function CardModal() {
       } catch (err: unknown) {
         let errorMessage = "Lỗi khi tải chi tiết thẻ: ";
         if (isAxiosError(err)) {
+          const axiosError = err as AxiosError<{ message?: string }>; // Ép kiểu AxiosError với data có message tùy chọn
           errorMessage +=
-            err.response?.data?.message || err.message || "Lỗi không xác định";
+            (axiosError.response?.data?.message as string | undefined) ||
+            axiosError.message ||
+            "Lỗi không xác định";
         } else {
           errorMessage += (err as Error).message || "Lỗi không xác định";
         }
@@ -79,12 +83,13 @@ export default function CardModal() {
           setError("Xóa thẻ thất bại: Phản hồi không hợp lệ từ server");
           setDeleting(false);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         let errorMessage = "Lỗi khi xóa thẻ: ";
         if (isAxiosError(error)) {
+          const axiosError = error as AxiosError<{ message?: string }>; // Ép kiểu AxiosError với data có message tùy chọn
           errorMessage +=
-            error.response?.data?.message ||
-            error.message ||
+            (axiosError.response?.data?.message as string | undefined) ||
+            axiosError.message ||
             "Lỗi không xác định";
         } else {
           errorMessage += (error as Error).message || "Lỗi không xác định";
