@@ -5,8 +5,8 @@ import { authAxios, isAxiosError } from "@/components/AuthAxios";
 interface Card {
   id: string;
   code: string;
-  value: string; // Thay number thành string
-  remainingValue: string; // Thay remaining thành remainingValue và dùng string
+  value: string;
+  remainingValue: string;
   expiredAt: string;
   createdAt?: string;
   updatedAt?: string;
@@ -27,15 +27,16 @@ interface FetchCardsProps {
     error: string | null,
     loading: boolean
   ) => void;
+  onLoadingChange: (loading: boolean) => void; // Thêm prop mới
 }
 
-export default function FetchCards({ onDataAction }: FetchCardsProps) {
-  //eslint disable-next-line @typescript-eslint/no-unused-vars
-  const [loading, setLoading] = useState(true);
+export default function FetchCards({ onDataAction, onLoadingChange }: FetchCardsProps) {
+  const [loading, setLoading] = useState(true); // Giữ useState
 
   useEffect(() => {
     const fetchCards = async () => {
       setLoading(true);
+      onLoadingChange(true); // Truyền trạng thái loading lên cha
       try {
         const response = await authAxios.get("/cards");
         onDataAction(response.data, null, false);
@@ -50,11 +51,12 @@ export default function FetchCards({ onDataAction }: FetchCardsProps) {
         onDataAction(null, errorMessage, false);
       } finally {
         setLoading(false);
+        onLoadingChange(false); // Truyền trạng thái loading lên cha
       }
     };
 
     fetchCards();
-  }, [onDataAction]);
+  }, [onDataAction, onLoadingChange]);
 
   return null;
 }
