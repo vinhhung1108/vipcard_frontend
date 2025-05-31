@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
 
@@ -8,6 +8,18 @@ interface Card {
   value: string;
   remainingValue: string;
   expiredAt: string;
+  serviceIds: number[];
+  partnerIds: number[];
+}
+
+interface Service {
+  id: number;
+  name: string;
+}
+
+interface Partner {
+  id: number;
+  name: string;
 }
 
 export default function NewCardPage() {
@@ -17,18 +29,56 @@ export default function NewCardPage() {
     value: "",
     remainingValue: "",
     expiredAt: "",
+    serviceIds: [],
+    partnerIds: [],
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loadingData, setLoadingData] = useState(true); // Trạng thái tải dữ liệu API
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // Fetch dữ liệu từ API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [servicesResponse, partnersResponse] = await Promise.all([
+          fetch("https://apicard.namident.com/services"),
+          fetch("https://apicard.namident.com/partners"),
+        ]);
+        const servicesData = await servicesResponse.json();
+        const partnersData = await partnersResponse.json();
+        setServices(servicesData);
+        setPartners(partnersData);
+      } catch (err) {
+        setError(
+          "Lỗi khi tải danh sách dịch vụ hoặc đối tác: " +
+            (err as Error).message
+        );
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
+
+  const handleSelectChange = useCallback(
+    (name: string, selectedKeys: Set<string>) => {
+      const values = Array.from(selectedKeys).map(Number); // Chuyển thành mảng số
+      setFormData((prev) => ({ ...prev, [name]: values }));
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -56,9 +106,26 @@ export default function NewCardPage() {
       setLoading(false);
       return;
     }
+    if (formData.serviceIds.length === 0 || formData.partnerIds.length === 0) {
+      setError("Vui lòng chọn ít nhất một dịch vụ và một đối tác");
+      setLoading(false);
+      return;
+    }
 
     try {
-      await authAxios.post("/cards", formData);
+      // Chuyển đổi dữ liệu trước khi gửi
+      const payload = {
+        code: formData.code,
+        value: Number(formData.value),
+        remainingValue: Number(formData.remainingValue),
+        expiredAt: formData.expiredAt,
+        serviceIds: formData.serviceIds,
+        partnerIds: formData.partnerIds,
+      };
+
+      console.log("Payload gửi lên:", payload);
+
+      await authAxios.post("/cards", payload);
       router.push("/dashboard/cards");
     } catch (err: unknown) {
       let errMessage = "Lỗi khi tạo thẻ: ";
@@ -71,7 +138,11 @@ export default function NewCardPage() {
       setError(errMessage);
       setLoading(false);
     }
-  };
+  }, [formData, router]);
+
+  if (loadingData) {
+    return <div className="p-6 text-center">Đang tải dữ liệu...</div>;
+  }
 
   return (
     <div className="p-6 bg-gray-50">
@@ -95,7 +166,7 @@ export default function NewCardPage() {
           <div>
             <label className="block text-foreground">Giá trị (VNĐ)</label>
             <input
-              type="text"
+              type="number"
               name="value"
               value={formData.value}
               onChange={handleChange}
@@ -106,7 +177,7 @@ export default function NewCardPage() {
           <div>
             <label className="block text-foreground">Còn lại (VNĐ)</label>
             <input
-              type="text"
+              type="number"
               name="remainingValue"
               value={formData.remainingValue}
               onChange={handleChange}
@@ -123,6 +194,50 @@ export default function NewCardPage() {
               onChange={handleChange}
               className="w-full p-2 border rounded"
             />
+          </div>
+          <div>
+            <label className="block text-foreground">Dịch vụ</label>
+            <select
+              multiple
+              value={formData.serviceIds.map(String)}
+              onChange={(e) =>
+                handleSelectChange(
+                  "serviceIds",
+                  new Set(
+                    Array.from(e.target.selectedOptions).map((opt) => opt.value)
+                  )
+                )
+              }
+              className="w-full p-2 border rounded"
+            >
+              {services.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-foreground">Đối tác</label>
+            <select
+              multiple
+              value={formData.partnerIds.map(String)}
+              onChange={(e) =>
+                handleSelectChange(
+                  "partnerIds",
+                  new Set(
+                    Array.from(e.target.selectedOptions).map((opt) => opt.value)
+                  )
+                )
+              }
+              className="w-full p-2 border rounded"
+            >
+              {partners.map((partner) => (
+                <option key={partner.id} value={partner.id}>
+                  {partner.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="mt-4 flex justify-end space-x-2">
