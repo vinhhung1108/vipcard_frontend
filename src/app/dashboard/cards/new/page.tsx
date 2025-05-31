@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authAxios } from "@/components/AuthAxios";
+import { authAxios, isAxiosError } from "@/components/AuthAxios";
 
 interface Card {
   code: string;
@@ -60,8 +60,15 @@ export default function NewCardPage() {
     try {
       await authAxios.post("/cards", formData);
       router.push("/dashboard/cards");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Lỗi khi tạo thẻ");
+    } catch (err: unknown) {
+      let errMessage = "Lỗi khi tạo thẻ: ";
+      if (isAxiosError(err)) {
+        errMessage +=
+          err.response?.data?.message || err.message || "Lỗi không xác định";
+      } else {
+        errMessage += (err as Error).message || "Lỗi không xác định";
+      }
+      setError(errMessage);
       setLoading(false);
     }
   };
