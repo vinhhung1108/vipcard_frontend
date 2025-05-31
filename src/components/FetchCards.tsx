@@ -27,16 +27,19 @@ interface FetchCardsProps {
     error: string | null,
     loading: boolean
   ) => void;
-  onLoadingChange: (loading: boolean) => void; // Thêm prop mới
+  onLoadingChangeAction: (loading: boolean) => void; // Đổi tên thành onLoadingChangeAction
 }
 
-export default function FetchCards({ onDataAction, onLoadingChange }: FetchCardsProps) {
-  const [loading, setLoading] = useState(true); // Giữ useState
+export default function FetchCards({
+  onDataAction,
+  onLoadingChangeAction,
+}: FetchCardsProps) {
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCards = async () => {
       setLoading(true);
-      onLoadingChange(true); // Truyền trạng thái loading lên cha
+      onLoadingChangeAction(true); // Sử dụng tên mới
       try {
         const response = await authAxios.get("/cards");
         onDataAction(response.data, null, false);
@@ -51,12 +54,12 @@ export default function FetchCards({ onDataAction, onLoadingChange }: FetchCards
         onDataAction(null, errorMessage, false);
       } finally {
         setLoading(false);
-        onLoadingChange(false); // Truyền trạng thái loading lên cha
+        onLoadingChangeAction(false); // Sử dụng tên mới
       }
     };
 
     fetchCards();
-  }, [onDataAction, onLoadingChange]);
+  }, [onDataAction, onLoadingChangeAction]);
 
   return null;
 }

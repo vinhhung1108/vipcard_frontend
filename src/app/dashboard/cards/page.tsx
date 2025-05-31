@@ -29,7 +29,7 @@ export default function CardsPage() {
   const router = useRouter();
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true); // Sử dụng state để lưu trạng thái loading
+  const [loading, setLoading] = useState(true);
 
   const handleData = useCallback(
     (
@@ -39,12 +39,12 @@ export default function CardsPage() {
     ) => {
       setCards(fetchedCards);
       setError(fetchedError);
-      setLoading(isLoading); // Cập nhật loading từ onDataAction
+      setLoading(isLoading);
     },
     []
   );
 
-  const handleLoadingChange = useCallback((isLoading: boolean) => {
+  const handleLoadingChangeAction = useCallback((isLoading: boolean) => {
     setLoading(isLoading); // Cập nhật loading từ FetchCards
   }, []);
 
@@ -52,7 +52,7 @@ export default function CardsPage() {
     <div className="p-6 bg-gray-50">
       <FetchCards
         onDataAction={handleData}
-        onLoadingChange={handleLoadingChange} // Truyền prop onLoadingChange
+        onLoadingChangeAction={handleLoadingChangeAction} // Đổi tên prop
       />
       {loading ? (
         <div className="flex justify-center items-center">
