@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
 
 interface Card {
@@ -27,19 +27,16 @@ interface FetchCardsProps {
     error: string | null,
     loading: boolean
   ) => void;
-  onLoadingChangeAction: (loading: boolean) => void; // Đảm bảo tên đúng
+  onLoadingChangeAction: (loading: boolean) => void;
 }
 
 export default function FetchCards({
   onDataAction,
   onLoadingChangeAction,
 }: FetchCardsProps) {
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchCards = async () => {
-      setLoading(true);
-      onLoadingChangeAction(true);
+      onLoadingChangeAction(true); // Truyền trạng thái loading lên cha
       try {
         const response = await authAxios.get("/cards");
         onDataAction(response.data, null, false);
@@ -53,8 +50,7 @@ export default function FetchCards({
         }
         onDataAction(null, errorMessage, false);
       } finally {
-        setLoading(false);
-        onLoadingChangeAction(false);
+        onLoadingChangeAction(false); // Truyền trạng thái loading lên cha
       }
     };
 

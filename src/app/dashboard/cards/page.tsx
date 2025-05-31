@@ -52,7 +52,7 @@ export default function CardsPage() {
     <div className="p-6 bg-gray-50">
       <FetchCards
         onDataAction={handleData}
-        onLoadingChangeAction={handleLoadingChangeAction} // Sử dụng tên mới
+        onLoadingChangeAction={handleLoadingChangeAction}
       />
       {loading ? (
         <div className="flex justify-center items-center">
