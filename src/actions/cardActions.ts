@@ -14,8 +14,11 @@ interface Card {
 
 export async function createCardAction(data: Card) {
   try {
-    const response = await authAxios.post("/cards", data); // Gửi payload là object
-    return response.data; // Trả về dữ liệu thành công
+    // Log payload trước khi gửi để kiểm tra
+    console.log("Payload gửi lên API (createCardAction):", data);
+    const response = await authAxios.post("/cards", data);
+    console.log("Phản hồi từ API (createCardAction):", response.data);
+    return response.data;
   } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error(error.message || "Lỗi khi tạo thẻ");
@@ -26,8 +29,11 @@ export async function createCardAction(data: Card) {
 
 export async function updateCardAction(cardId: string, data: Card) {
   try {
-    const response = await authAxios.put(`/cards/${cardId}`, data); // Gửi payload là object
-    return response.data; // Trả về dữ liệu thành công
+    // Log payload trước khi gửi để kiểm tra
+    console.log("Payload gửi lên API (updateCardAction):", data);
+    const response = await authAxios.put(`/cards/${cardId}`, data);
+    console.log("Phản hồi từ API (updateCardAction):", response.data);
+    return response.data;
   } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error(error.message || "Lỗi khi cập nhật thẻ");
