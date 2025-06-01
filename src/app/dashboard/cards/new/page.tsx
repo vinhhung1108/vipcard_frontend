@@ -2,7 +2,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
-import { AxiosError } from "axios"; // Thêm import AxiosError
+import { AxiosError } from "axios";
+import { DatePicker } from "@nextui-org/react"; // Thêm DatePicker
+import { parseDate, getLocalTimeZone, today } from "@internationalized/date"; // Thư viện hỗ trợ DatePicker
 
 interface Card {
   code: string;
@@ -29,7 +31,7 @@ export default function NewCardPage() {
     code: "",
     value: "",
     remainingValue: "",
-    expiredAt: "",
+    expiredAt: "", // Giá trị ban đầu là chuỗi rỗng
     serviceIds: [],
     partnerIds: [],
   });
@@ -37,7 +39,7 @@ export default function NewCardPage() {
   const [loading, setLoading] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
-  const [loadingData, setLoadingData] = useState(true); // Trạng thái tải dữ liệu API
+  const [loadingData, setLoadingData] = useState(true);
 
   // Fetch dữ liệu từ API sử dụng authAxios
   useEffect(() => {
@@ -47,14 +49,18 @@ export default function NewCardPage() {
           authAxios.get("https://apicard.namident.com/services"),
           authAxios.get("https://apicard.namident.com/partners"),
         ]);
-        setServices(servicesResponse.data); // Giả định data là mảng
-        setPartners(partnersResponse.data); // Giả định data là mảng
+        setServices(servicesResponse.data);
+        setPartners(partnersResponse.data);
       } catch (err) {
         let errMessage = "Lỗi khi tải danh sách: ";
         if (isAxiosError(err)) {
-          const axiosError = err as AxiosError<{ message?: string }>; // Ép kiểu với message tùy chọn
+          const axiosError = err as AxiosError<{
+            message?: string;
+            error?: string;
+          }>;
           errMessage +=
             (axiosError.response?.data?.message as string | undefined) ||
+            (axiosError.response?.data?.error as string | undefined) ||
             axiosError.message ||
             "Lỗi không xác định";
         } else {
@@ -83,6 +89,15 @@ export default function NewCardPage() {
     },
     []
   );
+
+  const handleDateChange = useCallback((date: any) => {
+    if (date) {
+      const isoDate = date.toDate(getLocalTimeZone()).toISOString();
+      setFormData((prev) => ({ ...prev, expiredAt: isoDate }));
+    } else {
+      setFormData((prev) => ({ ...prev, expiredAt: "" }));
+    }
+  }, []);
 
   const handleSubmit = useCallback(async () => {
     setLoading(true);
@@ -134,9 +149,13 @@ export default function NewCardPage() {
     } catch (err: unknown) {
       let errMessage = "Lỗi khi tạo thẻ: ";
       if (isAxiosError(err)) {
-        const axiosError = err as AxiosError<{ message?: string }>; // Ép kiểu với message tùy chọn
+        const axiosError = err as AxiosError<{
+          message?: string;
+          error?: string;
+        }>;
         errMessage +=
           (axiosError.response?.data?.message as string | undefined) ||
+          (axiosError.response?.data?.error as string | undefined) ||
           axiosError.message ||
           "Lỗi không xác định";
       } else {
@@ -194,12 +213,12 @@ export default function NewCardPage() {
           </div>
           <div>
             <label className="block text-foreground">Ngày hết hạn</label>
-            <input
-              type="datetime-local"
-              name="expiredAt"
-              value={formData.expiredAt}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
+            <DatePicker
+              label="Ngày hết hạn"
+              minValue={today(getLocalTimeZone())} // Giới hạn ngày nhỏ nhất là hôm nay
+              onChange={handleDateChange}
+              className="w-full"
+              showTimeField={false} // Ẩn trường chọn giờ
             />
           </div>
           <div>
