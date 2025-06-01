@@ -7,8 +7,8 @@ import { createCardAction } from "@/actions/cardActions";
 
 interface Card {
   code: string;
-  value: string;
-  remainingValue: string;
+  value: number;
+  remainingValue: number;
   expiredAt: string;
   serviceIds: number[];
   partnerIds: number[];

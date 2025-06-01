@@ -6,8 +6,8 @@ import { isAxiosError } from "axios";
 
 interface Card {
   code: string;
-  value: string;
-  remainingValue: string;
+  value: number; // Đổi thành number
+  remainingValue: number; // Đổi thành number
   expiredAt: string;
   serviceIds: number[];
   partnerIds: number[];
@@ -49,8 +49,8 @@ export default function CardForm({
 }: CardFormProps) {
   const [formData, setFormData] = useState<Card>({
     code: initialData.code || "",
-    value: initialData.value || "",
-    remainingValue: initialData.remainingValue || "",
+    value: initialData.value || 0, // Đổi thành number
+    remainingValue: initialData.remainingValue || 0, // Đổi thành number
     expiredAt: initialData.expiredAt || "",
     serviceIds: initialData.serviceIds || [],
     partnerIds: initialData.partnerIds || [],
@@ -72,7 +72,13 @@ export default function CardForm({
       setFormData((prev) => ({
         ...prev,
         [name]:
-          name === "referralCodeId" ? (value ? Number(value) : null) : value,
+          name === "value" || name === "remainingValue"
+            ? Number(value)
+            : name === "referralCodeId"
+            ? value
+              ? Number(value)
+              : null
+            : value,
       }));
     },
     []
@@ -107,27 +113,20 @@ export default function CardForm({
       setError("Vui lòng điền đầy đủ thông tin");
       return;
     }
-    if (isNaN(Number(formData.value)) || Number(formData.value) <= 0) {
+    if (isNaN(formData.value) || formData.value <= 0) {
       setError("Giá trị phải là số dương");
       return;
     }
-    if (
-      isNaN(Number(formData.remainingValue)) ||
-      Number(formData.remainingValue) < 0
-    ) {
+    if (isNaN(formData.remainingValue) || formData.remainingValue < 0) {
       setError("Số dư phải là số không âm");
-      return;
-    }
-    if (formData.serviceIds.length === 0 || formData.partnerIds.length === 0) {
-      setError("Vui lòng chọn ít nhất một dịch vụ và một đối tác");
       return;
     }
 
     try {
       const payload: Card = {
         code: formData.code,
-        value: formData.value,
-        remainingValue: formData.remainingValue,
+        value: Number(formData.value), // Đảm bảo là number
+        remainingValue: Number(formData.remainingValue), // Đảm bảo là number
         expiredAt: formData.expiredAt,
         serviceIds: formData.serviceIds,
         partnerIds: formData.partnerIds,
