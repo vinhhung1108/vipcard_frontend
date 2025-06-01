@@ -52,3 +52,17 @@ body {
 .react-datepicker__navigation-icon {
   color: #3b82f6; /* text-blue-500 */
 }
+
+/* Tùy chỉnh vị trí biểu tượng lịch */
+.react-datepicker__input-container {
+  position: relative;
+  display: flex;
+  align-items: center; /* Căn giữa theo chiều dọc */
+}
+
+.react-datepicker__input-container svg {
+  position: absolute;
+  right: 8px; /* Khoảng cách từ cạnh phải của ô nhập */
+  top: 50%; /* Căn giữa theo chiều dọc */
+  transform: translateY(-50%); /* Căn giữa chính xác */
+}

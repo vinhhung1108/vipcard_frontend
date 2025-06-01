@@ -170,13 +170,13 @@ export default function CardForm({
           <DatePicker
             selected={formData.expiredAt ? new Date(formData.expiredAt) : null}
             onChange={handleDateChange}
-            minDate={new Date()} // Giới hạn ngày nhỏ nhất là hôm nay
-            dateFormat="dd/MM/yyyy" // Chỉ hiển thị ngày
+            minDate={new Date()}
+            dateFormat="dd/MM/yyyy"
             placeholderText="Chọn ngày"
             className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 bg-blue-50"
             wrapperClassName="w-full"
             showIcon
-            icon={<CalendarDaysIcon className="w-5 h-5 text-blue-500 mt-2" />}
+            icon={<CalendarDaysIcon className="w-5 h-5 text-blue-500" />}
           />
         </div>
         <div>
