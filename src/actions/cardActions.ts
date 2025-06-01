@@ -12,11 +12,11 @@ interface Card {
   referralCodeId?: number | null;
 }
 
-export async function createCardAction(data: Card) {
+export async function createCardAction(data: Card, token?: string) {
   try {
-    // Log payload trước khi gửi để kiểm tra
     console.log("Payload gửi lên API (createCardAction):", data);
-    const response = await authAxios.post("/cards", data);
+    const config = token ? { headers: { "X-Authorization-Token": token } } : {};
+    const response = await authAxios.post("/cards", data, config);
     console.log("Phản hồi từ API (createCardAction):", response.data);
     return response.data;
   } catch (error: unknown) {
@@ -27,11 +27,15 @@ export async function createCardAction(data: Card) {
   }
 }
 
-export async function updateCardAction(cardId: string, data: Card) {
+export async function updateCardAction(
+  cardId: string,
+  data: Card,
+  token?: string
+) {
   try {
-    // Log payload trước khi gửi để kiểm tra
     console.log("Payload gửi lên API (updateCardAction):", data);
-    const response = await authAxios.put(`/cards/${cardId}`, data);
+    const config = token ? { headers: { "X-Authorization-Token": token } } : {};
+    const response = await authAxios.put(`/cards/${cardId}`, data, config);
     console.log("Phản hồi từ API (updateCardAction):", response.data);
     return response.data;
   } catch (error: unknown) {

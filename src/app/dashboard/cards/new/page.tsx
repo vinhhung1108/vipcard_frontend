@@ -60,10 +60,10 @@ export default function NewCardPage() {
     fetchData();
   }, []);
 
-  const handleSubmitAction = async (data: Card) => {
+  const handleSubmitAction = async (data: Card, token?: string) => {
     setLoading(true);
     try {
-      await createCardAction(data);
+      await createCardAction(data, token);
       router.push("/dashboard/cards");
     } finally {
       setLoading(false);

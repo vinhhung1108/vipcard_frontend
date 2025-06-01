@@ -35,7 +35,7 @@ interface CardFormProps {
   services: Service[];
   partners: Partner[];
   referralCodes: ReferralCode[];
-  onSubmitAction: (data: Card) => Promise<void>;
+  onSubmitAction: (data: Card, token?: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -94,7 +94,7 @@ export default function CardForm({
 
   const handleDateChange = useCallback((date: Date | null) => {
     if (date) {
-      const isoDate = date.toISOString(); // Không cố định thời gian, để khớp với Postman
+      const isoDate = date.toISOString();
       setFormData((prev) => ({ ...prev, expiredAt: isoDate }));
     } else {
       setFormData((prev) => ({ ...prev, expiredAt: "" }));
@@ -132,7 +132,21 @@ export default function CardForm({
         partnerIds: formData.partnerIds,
         referralCodeId: formData.referralCodeId,
       };
-      await onSubmitAction(payload);
+
+      // Lấy token từ document.cookie
+      let token: string | undefined;
+      const cookies = document.cookie
+        .split("; ")
+        .map((cookie) => cookie.trim());
+      for (const cookie of cookies) {
+        const [name, value] = cookie.split("=");
+        if (name === "token") {
+          token = value;
+          break;
+        }
+      }
+
+      await onSubmitAction(payload, token);
     } catch (err: unknown) {
       if (isAxiosError(err)) {
         setError(

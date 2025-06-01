@@ -68,10 +68,10 @@ export default function EditCardPage() {
     fetchData();
   }, [cardId]);
 
-  const handleSubmitAction = async (data: Card) => {
+  const handleSubmitAction = async (data: Card, token?: string) => {
     setLoading(true);
     try {
-      await updateCardAction(cardId, data);
+      await updateCardAction(cardId, data, token);
       router.push("/dashboard/cards");
     } finally {
       setLoading(false);
