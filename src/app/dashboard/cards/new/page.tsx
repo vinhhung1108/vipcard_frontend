@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { authAxios, isAxiosError } from "@/components/AuthAxios";
-import { AxiosError } from "axios";
+import { authAxios } from "@/components/AuthAxios";
 import CardForm from "@/components/CardForm";
+import { createCardAction } from "@/actions/cardActions";
 
 interface Card {
   code: string;
@@ -40,21 +40,7 @@ export default function NewCardPage() {
         ]);
         setServices(servicesResponse.data);
         setPartners(partnersResponse.data);
-      } catch (err) {
-        let errMessage = "Lỗi khi tải danh sách: ";
-        if (isAxiosError(err)) {
-          const axiosError = err as AxiosError<{
-            message?: string;
-            error?: string;
-          }>;
-          errMessage +=
-            axiosError.response?.data?.message ||
-            axiosError.response?.data?.error ||
-            axiosError.message ||
-            "Lỗi không xác định";
-        } else {
-          errMessage += (err as Error).message || "Lỗi không xác định";
-        }
+      } catch {
         // Không hiển thị lỗi ở đây, để CardForm xử lý
       } finally {
         setLoadingData(false);
@@ -63,26 +49,11 @@ export default function NewCardPage() {
     fetchData();
   }, []);
 
-  const handleSubmit = async (data: Card) => {
+  const handleSubmitAction = async (data: Card) => {
     setLoading(true);
     try {
-      await authAxios.post("/cards", data);
+      await createCardAction(data);
       router.push("/dashboard/cards");
-    } catch (err: unknown) {
-      if (isAxiosError(err)) {
-        const axiosError = err as AxiosError<{
-          message?: string;
-          error?: string;
-        }>;
-        throw new Error(
-          axiosError.response?.data?.message ||
-            axiosError.response?.data?.error ||
-            axiosError.message ||
-            "Lỗi không xác định"
-        );
-      } else {
-        throw new Error((err as Error).message || "Lỗi không xác định");
-      }
     } finally {
       setLoading(false);
     }
@@ -100,7 +71,7 @@ export default function NewCardPage() {
       <CardForm
         services={services}
         partners={partners}
-        onSubmit={handleSubmit}
+        onSubmitAction={handleSubmitAction}
         isLoading={loading}
       />
     </div>

@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { authAxios, isAxiosError } from "@/components/AuthAxios";
-import { AxiosError } from "axios";
+import { authAxios } from "@/components/AuthAxios";
 import CardForm from "@/components/CardForm";
+import { updateCardAction } from "@/actions/cardActions";
 
 interface Card {
   code: string;
@@ -45,7 +45,7 @@ export default function EditCardPage() {
         setCard(cardResponse.data);
         setServices(servicesResponse.data);
         setPartners(partnersResponse.data);
-      } catch (err) {
+      } catch {
         // Không hiển thị lỗi ở đây, để CardForm xử lý
       } finally {
         setLoadingData(false);
@@ -54,26 +54,11 @@ export default function EditCardPage() {
     fetchData();
   }, [cardId]);
 
-  const handleSubmit = async (data: Card) => {
+  const handleSubmitAction = async (data: Card) => {
     setLoading(true);
     try {
-      await authAxios.put(`/cards/${cardId}`, data);
+      await updateCardAction(cardId, data);
       router.push("/dashboard/cards");
-    } catch (err: unknown) {
-      if (isAxiosError(err)) {
-        const axiosError = err as AxiosError<{
-          message?: string;
-          error?: string;
-        }>;
-        throw new Error(
-          axiosError.response?.data?.message ||
-            axiosError.response?.data?.error ||
-            axiosError.message ||
-            "Lỗi không xác định"
-        );
-      } else {
-        throw new Error((err as Error).message || "Lỗi không xác định");
-      }
     } finally {
       setLoading(false);
     }
@@ -96,7 +81,7 @@ export default function EditCardPage() {
         initialData={card}
         services={services}
         partners={partners}
-        onSubmit={handleSubmit}
+        onSubmitAction={handleSubmitAction}
         isLoading={loading}
       />
     </div>

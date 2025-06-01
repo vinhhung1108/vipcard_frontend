@@ -1,7 +1,8 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import { isAxiosError } from "axios";
 
 interface Card {
   code: string;
@@ -26,7 +27,7 @@ interface CardFormProps {
   initialData?: Partial<Card>;
   services: Service[];
   partners: Partner[];
-  onSubmit: (data: Card) => Promise<void>;
+  onSubmitAction: (data: Card) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -34,7 +35,7 @@ export default function CardForm({
   initialData = {},
   services,
   partners,
-  onSubmit,
+  onSubmitAction,
   isLoading,
 }: CardFormProps) {
   const [formData, setFormData] = useState<Card>({
@@ -49,18 +50,17 @@ export default function CardForm({
 
   const handleChange = useCallback(
     (
-      e: React.ChangeEvent<
-        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-      >
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+      name: keyof Pick<Card, "code" | "value" | "remainingValue" | "expiredAt">
     ) => {
-      const { name, value } = e.target;
+      const { value } = e.target;
       setFormData((prev) => ({ ...prev, [name]: value }));
     },
     []
   );
 
   const handleSelectChange = useCallback(
-    (name: string, selectedKeys: Set<string>) => {
+    (name: "serviceIds" | "partnerIds", selectedKeys: Set<string>) => {
       const values = Array.from(selectedKeys).map(Number);
       setFormData((prev) => ({ ...prev, [name]: values }));
     },
@@ -113,11 +113,20 @@ export default function CardForm({
         serviceIds: formData.serviceIds,
         partnerIds: formData.partnerIds,
       };
-      await onSubmit(payload);
-    } catch (err: any) {
-      setError(err.message || "Lỗi không xác định");
+      await onSubmitAction(payload);
+    } catch (err: unknown) {
+      if (isAxiosError(err)) {
+        setError(
+          err.response?.data?.message ||
+            err.response?.data?.error ||
+            err.message ||
+            "Lỗi không xác định"
+        );
+      } else {
+        setError((err as Error).message || "Lỗi không xác định");
+      }
     }
-  }, [formData, onSubmit]);
+  }, [formData, onSubmitAction]);
 
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
@@ -129,7 +138,7 @@ export default function CardForm({
             type="text"
             name="code"
             value={formData.code}
-            onChange={handleChange}
+            onChange={(e) => handleChange(e, "code")}
             className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
             placeholder="VD: VIP-0004"
           />
@@ -140,7 +149,7 @@ export default function CardForm({
             type="number"
             name="value"
             value={formData.value}
-            onChange={handleChange}
+            onChange={(e) => handleChange(e, "value")}
             className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
             placeholder="VD: 300000000"
           />
@@ -151,7 +160,7 @@ export default function CardForm({
             type="number"
             name="remainingValue"
             value={formData.remainingValue}
-            onChange={handleChange}
+            onChange={(e) => handleChange(e, "remainingValue")}
             className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
             placeholder="VD: 200000"
           />
