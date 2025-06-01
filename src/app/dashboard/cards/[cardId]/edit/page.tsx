@@ -12,6 +12,7 @@ interface Card {
   expiredAt: string;
   serviceIds: number[];
   partnerIds: number[];
+  referralCodeId?: number | null;
 }
 
 interface Service {
@@ -24,27 +25,40 @@ interface Partner {
   name: string;
 }
 
+interface ReferralCode {
+  id: number;
+  code: string;
+  description: string;
+}
+
 export default function EditCardPage() {
   const router = useRouter();
   const { cardId } = useParams() as { cardId: string };
   const [card, setCard] = useState<Card | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [cardResponse, servicesResponse, partnersResponse] =
-          await Promise.all([
-            authAxios.get(`/cards/${cardId}`),
-            authAxios.get("https://apicard.namident.com/services"),
-            authAxios.get("https://apicard.namident.com/partners"),
-          ]);
+        const [
+          cardResponse,
+          servicesResponse,
+          partnersResponse,
+          referralCodesResponse,
+        ] = await Promise.all([
+          authAxios.get(`/cards/${cardId}`),
+          authAxios.get("https://apicard.namident.com/services"),
+          authAxios.get("https://apicard.namident.com/partners"),
+          authAxios.get("https://apicard.namident.com/referral-codes"),
+        ]);
         setCard(cardResponse.data);
         setServices(servicesResponse.data);
         setPartners(partnersResponse.data);
+        setReferralCodes(referralCodesResponse.data);
       } catch {
         // Không hiển thị lỗi ở đây, để CardForm xử lý
       } finally {
@@ -81,6 +95,7 @@ export default function EditCardPage() {
         initialData={card}
         services={services}
         partners={partners}
+        referralCodes={referralCodes}
         onSubmitAction={handleSubmitAction}
         isLoading={loading}
       />

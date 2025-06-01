@@ -11,6 +11,7 @@ interface Card {
   expiredAt: string;
   serviceIds: number[];
   partnerIds: number[];
+  referralCodeId?: number | null; // Thêm referralCodeId, có thể là null
 }
 
 interface Service {
@@ -23,10 +24,17 @@ interface Partner {
   name: string;
 }
 
+interface ReferralCode {
+  id: number;
+  code: string;
+  description: string;
+}
+
 interface CardFormProps {
   initialData?: Partial<Card>;
   services: Service[];
   partners: Partner[];
+  referralCodes: ReferralCode[];
   onSubmitAction: (data: Card) => Promise<void>;
   isLoading: boolean;
 }
@@ -35,6 +43,7 @@ export default function CardForm({
   initialData = {},
   services,
   partners,
+  referralCodes,
   onSubmitAction,
   isLoading,
 }: CardFormProps) {
@@ -45,16 +54,26 @@ export default function CardForm({
     expiredAt: initialData.expiredAt || "",
     serviceIds: initialData.serviceIds || [],
     partnerIds: initialData.partnerIds || [],
+    referralCodeId: initialData.referralCodeId || null,
   });
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = useCallback(
     (
-      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-      name: keyof Pick<Card, "code" | "value" | "remainingValue" | "expiredAt">
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >,
+      name: keyof Pick<
+        Card,
+        "code" | "value" | "remainingValue" | "expiredAt" | "referralCodeId"
+      >
     ) => {
       const { value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({
+        ...prev,
+        [name]:
+          name === "referralCodeId" ? (value ? Number(value) : null) : value,
+      }));
     },
     []
   );
@@ -112,6 +131,7 @@ export default function CardForm({
         expiredAt: formData.expiredAt,
         serviceIds: formData.serviceIds,
         partnerIds: formData.partnerIds,
+        referralCodeId: formData.referralCodeId,
       };
       await onSubmitAction(payload);
     } catch (err: unknown) {
@@ -219,6 +239,21 @@ export default function CardForm({
             {partners.map((partner) => (
               <option key={partner.id} value={partner.id}>
                 {partner.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-foreground">Giới thiệu</label>
+          <select
+            value={formData.referralCodeId?.toString() ?? ""}
+            onChange={(e) => handleChange(e, "referralCodeId")}
+            className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
+          >
+            <option value="">Không chọn</option>
+            {referralCodes.map((referral) => (
+              <option key={referral.id} value={referral.id}>
+                {referral.code} - {referral.description}
               </option>
             ))}
           </select>

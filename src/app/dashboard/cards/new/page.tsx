@@ -12,6 +12,7 @@ interface Card {
   expiredAt: string;
   serviceIds: number[];
   partnerIds: number[];
+  referralCodeId?: number | null;
 }
 
 interface Service {
@@ -24,22 +25,32 @@ interface Partner {
   name: string;
 }
 
+interface ReferralCode {
+  id: number;
+  code: string;
+  description: string;
+}
+
 export default function NewCardPage() {
   const router = useRouter();
   const [services, setServices] = useState<Service[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [servicesResponse, partnersResponse] = await Promise.all([
-          authAxios.get("https://apicard.namident.com/services"),
-          authAxios.get("https://apicard.namident.com/partners"),
-        ]);
+        const [servicesResponse, partnersResponse, referralCodesResponse] =
+          await Promise.all([
+            authAxios.get("https://apicard.namident.com/services"),
+            authAxios.get("https://apicard.namident.com/partners"),
+            authAxios.get("https://apicard.namident.com/referral-codes"),
+          ]);
         setServices(servicesResponse.data);
         setPartners(partnersResponse.data);
+        setReferralCodes(referralCodesResponse.data);
       } catch {
         // Không hiển thị lỗi ở đây, để CardForm xử lý
       } finally {
@@ -71,6 +82,7 @@ export default function NewCardPage() {
       <CardForm
         services={services}
         partners={partners}
+        referralCodes={referralCodes}
         onSubmitAction={handleSubmitAction}
         isLoading={loading}
       />

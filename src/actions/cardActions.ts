@@ -1,4 +1,4 @@
-"use server"; // Directive để khai báo Server Actions
+"use server";
 
 import { authAxios } from "@/components/AuthAxios";
 
@@ -9,6 +9,7 @@ interface Card {
   expiredAt: string;
   serviceIds: number[];
   partnerIds: number[];
+  referralCodeId?: number | null;
 }
 
 export async function createCardAction(data: Card) {
