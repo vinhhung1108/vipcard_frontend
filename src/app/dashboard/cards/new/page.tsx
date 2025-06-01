@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
 import { AxiosError } from "axios";
-import { DatePicker } from "@nextui-org/react"; // Thêm DatePicker
-import { parseDate, getLocalTimeZone, today } from "@internationalized/date"; // Thư viện hỗ trợ DatePicker
+import { DatePicker } from "@nextui-org/react";
+import { parseDate, getLocalTimeZone, today } from "@internationalized/date";
 
 interface Card {
   code: string;
@@ -31,7 +31,7 @@ export default function NewCardPage() {
     code: "",
     value: "",
     remainingValue: "",
-    expiredAt: "", // Giá trị ban đầu là chuỗi rỗng
+    expiredAt: "",
     serviceIds: [],
     partnerIds: [],
   });
@@ -41,7 +41,6 @@ export default function NewCardPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  // Fetch dữ liệu từ API sử dụng authAxios
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -218,7 +217,7 @@ export default function NewCardPage() {
               minValue={today(getLocalTimeZone())} // Giới hạn ngày nhỏ nhất là hôm nay
               onChange={handleDateChange}
               className="w-full"
-              showTimeField={false} // Ẩn trường chọn giờ
+              granularity="day" // Chỉ chọn ngày, không chọn giờ
             />
           </div>
           <div>
