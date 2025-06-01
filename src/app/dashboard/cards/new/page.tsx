@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
 import { AxiosError } from "axios";
 import { DatePicker } from "@nextui-org/react";
-import { getLocalTimeZone, today, DateValue } from "@internationalized/date"; // Thêm DateValue
+import { getLocalTimeZone, today, DateValue } from "@internationalized/date";
+import { CalendarIcon } from "@nextui-org/react"; // Thêm icon tùy chỉnh
 
 interface Card {
   code: string;
@@ -218,6 +219,18 @@ export default function NewCardPage() {
               onChange={handleDateChange}
               className="w-full"
               granularity="day"
+              selectorIcon={<CalendarIcon className="text-blue-500" />}
+              calendarProps={{
+                className: "bg-white shadow-lg rounded-lg",
+                weekdayStyle: "short",
+                focusedDateStyle: "bg-blue-500 text-white rounded-full",
+                selectedDateStyle: "bg-blue-500 text-white rounded-full",
+                todayStyle: "border-2 border-blue-500 rounded-full",
+              }}
+              inputProps={{
+                className:
+                  "w-full p-2 border rounded bg-blue-50 border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200",
+              }}
             />
           </div>
           <div>
