@@ -1,11 +1,9 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
 import { AxiosError } from "axios";
-import { DatePicker } from "@nextui-org/react";
-import { getLocalTimeZone, today, DateValue } from "@internationalized/date";
-import { CalendarIcon } from "@nextui-org/react"; // Thêm icon tùy chỉnh
+import CardForm from "@/components/CardForm";
 
 interface Card {
   code: string;
@@ -28,19 +26,10 @@ interface Partner {
 
 export default function NewCardPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState<Card>({
-    code: "",
-    value: "",
-    remainingValue: "",
-    expiredAt: "",
-    serviceIds: [],
-    partnerIds: [],
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,14 +48,14 @@ export default function NewCardPage() {
             error?: string;
           }>;
           errMessage +=
-            (axiosError.response?.data?.message as string | undefined) ||
-            (axiosError.response?.data?.error as string | undefined) ||
+            axiosError.response?.data?.message ||
+            axiosError.response?.data?.error ||
             axiosError.message ||
             "Lỗi không xác định";
         } else {
           errMessage += (err as Error).message || "Lỗi không xác định";
         }
-        setError(errMessage);
+        // Không hiển thị lỗi ở đây, để CardForm xử lý
       } finally {
         setLoadingData(false);
       }
@@ -74,97 +63,30 @@ export default function NewCardPage() {
     fetchData();
   }, []);
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    },
-    []
-  );
-
-  const handleSelectChange = useCallback(
-    (name: string, selectedKeys: Set<string>) => {
-      const values = Array.from(selectedKeys).map(Number);
-      setFormData((prev) => ({ ...prev, [name]: values }));
-    },
-    []
-  );
-
-  const handleDateChange = useCallback((date: DateValue | null) => {
-    if (date) {
-      const isoDate = date.toDate(getLocalTimeZone()).toISOString();
-      setFormData((prev) => ({ ...prev, expiredAt: isoDate }));
-    } else {
-      setFormData((prev) => ({ ...prev, expiredAt: "" }));
-    }
-  }, []);
-
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = async (data: Card) => {
     setLoading(true);
-    setError(null);
-
-    if (
-      !formData.code ||
-      !formData.value ||
-      !formData.remainingValue ||
-      !formData.expiredAt
-    ) {
-      setError("Vui lòng điền đầy đủ thông tin");
-      setLoading(false);
-      return;
-    }
-    if (isNaN(Number(formData.value)) || Number(formData.value) <= 0) {
-      setError("Giá trị phải là số dương");
-      setLoading(false);
-      return;
-    }
-    if (
-      isNaN(Number(formData.remainingValue)) ||
-      Number(formData.remainingValue) < 0
-    ) {
-      setError("Số dư phải là số không âm");
-      setLoading(false);
-      return;
-    }
-    if (formData.serviceIds.length === 0 || formData.partnerIds.length === 0) {
-      setError("Vui lòng chọn ít nhất một dịch vụ và một đối tác");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const payload = {
-        code: formData.code,
-        value: Number(formData.value),
-        remainingValue: Number(formData.remainingValue),
-        expiredAt: formData.expiredAt,
-        serviceIds: formData.serviceIds,
-        partnerIds: formData.partnerIds,
-      };
-
-      console.log("Payload gửi lên:", payload);
-
-      await authAxios.post("/cards", payload);
+      await authAxios.post("/cards", data);
       router.push("/dashboard/cards");
     } catch (err: unknown) {
-      let errMessage = "Lỗi khi tạo thẻ: ";
       if (isAxiosError(err)) {
         const axiosError = err as AxiosError<{
           message?: string;
           error?: string;
         }>;
-        errMessage +=
-          (axiosError.response?.data?.message as string | undefined) ||
-          (axiosError.response?.data?.error as string | undefined) ||
-          axiosError.message ||
-          "Lỗi không xác định";
+        throw new Error(
+          axiosError.response?.data?.message ||
+            axiosError.response?.data?.error ||
+            axiosError.message ||
+            "Lỗi không xác định"
+        );
       } else {
-        errMessage += (err as Error).message || "Lỗi không xác định";
+        throw new Error((err as Error).message || "Lỗi không xác định");
       }
-      setError(errMessage);
+    } finally {
       setLoading(false);
     }
-  }, [formData, router]);
+  };
 
   if (loadingData) {
     return <div className="p-6 text-center">Đang tải dữ liệu...</div>;
@@ -175,127 +97,12 @@ export default function NewCardPage() {
       <h1 className="text-2xl font-bold mb-4 text-foreground text-center">
         Thêm mới thẻ
       </h1>
-      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
-      <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-foreground">Mã thẻ</label>
-            <input
-              type="text"
-              name="code"
-              value={formData.code}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="VD: VIP-0004"
-            />
-          </div>
-          <div>
-            <label className="block text-foreground">Giá trị (VNĐ)</label>
-            <input
-              type="number"
-              name="value"
-              value={formData.value}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="VD: 300000000"
-            />
-          </div>
-          <div>
-            <label className="block text-foreground">Còn lại (VNĐ)</label>
-            <input
-              type="number"
-              name="remainingValue"
-              value={formData.remainingValue}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="VD: 200000"
-            />
-          </div>
-          <div>
-            <label className="block text-foreground">Ngày hết hạn</label>
-            <DatePicker
-              label="Ngày hết hạn"
-              minValue={today(getLocalTimeZone())}
-              onChange={handleDateChange}
-              className="w-full"
-              granularity="day"
-              selectorIcon={<CalendarIcon className="text-blue-500" />}
-              calendarProps={{
-                className: "bg-white shadow-lg rounded-lg",
-                weekdayStyle: "short",
-                focusedDateStyle: "bg-blue-500 text-white rounded-full",
-                selectedDateStyle: "bg-blue-500 text-white rounded-full",
-                todayStyle: "border-2 border-blue-500 rounded-full",
-              }}
-              inputProps={{
-                className:
-                  "w-full p-2 border rounded bg-blue-50 border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200",
-              }}
-            />
-          </div>
-          <div>
-            <label className="block text-foreground">Dịch vụ</label>
-            <select
-              multiple
-              value={formData.serviceIds.map(String)}
-              onChange={(e) =>
-                handleSelectChange(
-                  "serviceIds",
-                  new Set(
-                    Array.from(e.target.selectedOptions).map((opt) => opt.value)
-                  )
-                )
-              }
-              className="w-full p-2 border rounded"
-            >
-              {services.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-foreground">Đối tác</label>
-            <select
-              multiple
-              value={formData.partnerIds.map(String)}
-              onChange={(e) =>
-                handleSelectChange(
-                  "partnerIds",
-                  new Set(
-                    Array.from(e.target.selectedOptions).map((opt) => opt.value)
-                  )
-                )
-              }
-              className="w-full p-2 border rounded"
-            >
-              {partners.map((partner) => (
-                <option key={partner.id} value={partner.id}>
-                  {partner.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="mt-4 flex justify-end space-x-2">
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className={`px-4 py-2 bg-blue-500 text-white rounded ${
-              loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
-            }`}
-          >
-            {loading ? "Đang tạo..." : "Tạo thẻ"}
-          </button>
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Hủy
-          </button>
-        </div>
-      </div>
+      <CardForm
+        services={services}
+        partners={partners}
+        onSubmit={handleSubmit}
+        isLoading={loading}
+      />
     </div>
   );
 }
