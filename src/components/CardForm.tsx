@@ -11,7 +11,7 @@ interface Card {
   expiredAt: string;
   serviceIds: number[];
   partnerIds: number[];
-  referralCodeId?: number | null; // Thêm referralCodeId, có thể là null
+  referralCodeId?: number | null;
 }
 
 interface Service {
@@ -137,7 +137,7 @@ export default function CardForm({
     } catch (err: unknown) {
       if (isAxiosError(err)) {
         setError(
-          err.response?.data?.message ||
+          err.response?.data?.message?.join(", ") ||
             err.response?.data?.error ||
             err.message ||
             "Lỗi không xác định"
