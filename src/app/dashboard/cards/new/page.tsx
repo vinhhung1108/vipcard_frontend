@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
 import { AxiosError } from "axios";
 import { DatePicker } from "@nextui-org/react";
-import { parseDate, getLocalTimeZone, today } from "@internationalized/date";
+import { getLocalTimeZone, today, DateValue } from "@internationalized/date"; // Thêm DateValue
 
 interface Card {
   code: string;
@@ -89,7 +89,7 @@ export default function NewCardPage() {
     []
   );
 
-  const handleDateChange = useCallback((date: any) => {
+  const handleDateChange = useCallback((date: DateValue | null) => {
     if (date) {
       const isoDate = date.toDate(getLocalTimeZone()).toISOString();
       setFormData((prev) => ({ ...prev, expiredAt: isoDate }));
@@ -214,10 +214,10 @@ export default function NewCardPage() {
             <label className="block text-foreground">Ngày hết hạn</label>
             <DatePicker
               label="Ngày hết hạn"
-              minValue={today(getLocalTimeZone())} // Giới hạn ngày nhỏ nhất là hôm nay
+              minValue={today(getLocalTimeZone())}
               onChange={handleDateChange}
               className="w-full"
-              granularity="day" // Chỉ chọn ngày, không chọn giờ
+              granularity="day"
             />
           </div>
           <div>
