@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
@@ -49,15 +48,14 @@ export default function CardForm({
   isLoading,
 }: CardFormProps) {
   const [formData, setFormData] = useState<Card>({
-    code: initialData.code ?? "",
-    value: initialData.value ?? 0,
-    remainingValue: initialData.remainingValue ?? 0,
-    expiredAt: initialData.expiredAt ?? "",
-    serviceIds: initialData.serviceIds ?? [],
-    partnerIds: initialData.partnerIds ?? [],
-    referralCodeId: initialData.referralCodeId ?? null,
+    code: initialData.code || "",
+    value: initialData.value || 0,
+    remainingValue: initialData.remainingValue || 0,
+    expiredAt: initialData.expiredAt || "",
+    serviceIds: initialData.serviceIds || [],
+    partnerIds: initialData.partnerIds || [],
+    referralCodeId: initialData.referralCodeId || null,
   });
-
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = useCallback(
@@ -95,10 +93,12 @@ export default function CardForm({
   );
 
   const handleDateChange = useCallback((date: Date | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      expiredAt: date ? date.toISOString() : "",
-    }));
+    if (date) {
+      const isoDate = date.toISOString();
+      setFormData((prev) => ({ ...prev, expiredAt: isoDate }));
+    } else {
+      setFormData((prev) => ({ ...prev, expiredAt: "" }));
+    }
   }, []);
 
   const handleFormSubmit = useCallback(async () => {
@@ -113,34 +113,33 @@ export default function CardForm({
       setError("Vui lòng điền đầy đủ thông tin");
       return;
     }
-
     if (isNaN(formData.value) || formData.value <= 0) {
       setError("Giá trị phải là số dương");
       return;
     }
-
     if (isNaN(formData.remainingValue) || formData.remainingValue < 0) {
       setError("Số dư phải là số không âm");
       return;
     }
 
     try {
-      await onSubmitAction({
-        ...formData,
+      const payload: Card = {
+        code: formData.code,
         value: Number(formData.value),
         remainingValue: Number(formData.remainingValue),
-        referralCodeId:
-          formData.referralCodeId !== undefined
-            ? formData.referralCodeId
-            : null,
-      });
+        expiredAt: formData.expiredAt,
+        serviceIds: formData.serviceIds,
+        partnerIds: formData.partnerIds,
+        referralCodeId: formData.referralCodeId,
+      };
+      await onSubmitAction(payload);
     } catch (err: unknown) {
       if (isAxiosError(err)) {
-        const apiMsg = err.response?.data?.message;
         setError(
-          Array.isArray(apiMsg)
-            ? apiMsg.join(", ")
-            : err.response?.data?.error || err.message || "Lỗi không xác định"
+          err.response?.data?.message?.join(", ") ||
+            err.response?.data?.error ||
+            err.message ||
+            "Lỗi không xác định"
         );
       } else {
         setError((err as Error).message || "Lỗi không xác định");
@@ -152,58 +151,53 @@ export default function CardForm({
     <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
       {error && <div className="text-red-500 text-center mb-4">{error}</div>}
       <div className="space-y-4">
-        {/* Mã thẻ */}
         <div>
           <label className="block text-foreground">Mã thẻ</label>
           <input
             type="text"
+            name="code"
             value={formData.code}
             onChange={(e) => handleChange(e, "code")}
-            className="w-full p-2 border rounded border-gray-300"
-            placeholder="VD: VIP-0001"
+            className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
+            placeholder="VD: VIP-0004"
           />
         </div>
-
-        {/* Giá trị */}
         <div>
           <label className="block text-foreground">Giá trị (VNĐ)</label>
           <input
             type="number"
+            name="value"
             value={formData.value}
             onChange={(e) => handleChange(e, "value")}
-            className="w-full p-2 border rounded border-gray-300"
-            placeholder="VD: 1000000"
+            className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
+            placeholder="VD: 300000000"
           />
         </div>
-
-        {/* Còn lại */}
         <div>
           <label className="block text-foreground">Còn lại (VNĐ)</label>
           <input
             type="number"
+            name="remainingValue"
             value={formData.remainingValue}
             onChange={(e) => handleChange(e, "remainingValue")}
-            className="w-full p-2 border rounded border-gray-300"
-            placeholder="VD: 500000"
+            className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
+            placeholder="VD: 200000"
           />
         </div>
-
-        {/* Ngày hết hạn */}
         <div>
           <label className="block text-foreground">Ngày hết hạn</label>
           <DatePicker
             selected={formData.expiredAt ? new Date(formData.expiredAt) : null}
             onChange={handleDateChange}
-            dateFormat="dd/MM/yyyy"
             minDate={new Date()}
+            dateFormat="dd/MM/yyyy"
             placeholderText="Chọn ngày"
-            className="w-full p-2 border rounded border-gray-300 bg-blue-50"
+            className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 bg-blue-50"
+            wrapperClassName="w-full"
             showIcon
             icon={<CalendarDaysIcon className="w-5 h-5 text-blue-500" />}
           />
         </div>
-
-        {/* Dịch vụ */}
         <div>
           <label className="block text-foreground">Dịch vụ</label>
           <select
@@ -213,21 +207,19 @@ export default function CardForm({
               handleSelectChange(
                 "serviceIds",
                 new Set(
-                  Array.from(e.target.selectedOptions).map((o) => o.value)
+                  Array.from(e.target.selectedOptions).map((opt) => opt.value)
                 )
               )
             }
-            className="w-full p-2 border rounded border-gray-300"
+            className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
           >
-            {services.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
+            {services.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name}
               </option>
             ))}
           </select>
         </div>
-
-        {/* Đối tác */}
         <div>
           <label className="block text-foreground">Đối tác</label>
           <select
@@ -237,38 +229,35 @@ export default function CardForm({
               handleSelectChange(
                 "partnerIds",
                 new Set(
-                  Array.from(e.target.selectedOptions).map((o) => o.value)
+                  Array.from(e.target.selectedOptions).map((opt) => opt.value)
                 )
               )
             }
-            className="w-full p-2 border rounded border-gray-300"
+            className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
           >
-            {partners.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
+            {partners.map((partner) => (
+              <option key={partner.id} value={partner.id}>
+                {partner.name}
               </option>
             ))}
           </select>
         </div>
-
-        {/* Giới thiệu */}
         <div>
           <label className="block text-foreground">Giới thiệu</label>
           <select
-            value={formData.referralCodeId?.toString() || ""}
+            value={formData.referralCodeId?.toString() ?? ""}
             onChange={(e) => handleChange(e, "referralCodeId")}
-            className="w-full p-2 border rounded border-gray-300"
+            className="w-full p-2 border rounded border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
           >
             <option value="">Không chọn</option>
-            {referralCodes.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.code} - {r.description}
+            {referralCodes.map((referral) => (
+              <option key={referral.id} value={referral.id}>
+                {referral.code} - {referral.description}
               </option>
             ))}
           </select>
         </div>
       </div>
-
       <div className="mt-4 flex justify-end space-x-2">
         <button
           onClick={handleFormSubmit}
