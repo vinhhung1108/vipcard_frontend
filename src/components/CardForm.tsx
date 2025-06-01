@@ -94,7 +94,7 @@ export default function CardForm({
 
   const handleDateChange = useCallback((date: Date | null) => {
     if (date) {
-      const isoDate = date.toISOString();
+      const isoDate = date.toISOString(); // Không cố định thời gian, để khớp với Postman
       setFormData((prev) => ({ ...prev, expiredAt: isoDate }));
     } else {
       setFormData((prev) => ({ ...prev, expiredAt: "" }));
