@@ -41,6 +41,18 @@ export default function EditCardPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [loading, setLoading] = useState(false);
 
+  // Kiểm tra token khi component mount
+  useEffect(() => {
+    const token = document.cookie
+      .split("; ")
+      .find((cookie) => cookie.startsWith("token="))
+      ?.split("=")[1];
+
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
