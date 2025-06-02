@@ -39,9 +39,11 @@ export async function updateCardAction(
     console.log("Phản hồi từ API (updateCardAction):", response.data);
     return response.data;
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      throw new Error(error.message || "Lỗi khi cập nhật thẻ");
-    }
-    throw new Error("Lỗi không xác định khi cập nhật thẻ");
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Lỗi không xác định khi cập nhật thẻ";
+    console.error("Lỗi trong updateCardAction:", errorMessage);
+    throw new Error(errorMessage);
   }
 }

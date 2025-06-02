@@ -41,10 +41,15 @@ export default function EditCardPage() {
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Kiểm tra token khi component mount
   useEffect(() => {
-    checkTokenAndRedirect(router);
+    const verifyToken = async () => {
+      await checkTokenAndRedirect(router);
+      setLoadingData(false);
+    };
+    verifyToken();
   }, [router]);
 
   useEffect(() => {
@@ -56,17 +61,35 @@ export default function EditCardPage() {
           partnersResponse,
           referralCodesResponse,
         ] = await Promise.all([
-          authAxios.get(`/cards/${cardId}`),
-          authAxios.get("https://apicard.namident.com/services"),
-          authAxios.get("https://apicard.namident.com/partners"),
-          authAxios.get("https://apicard.namident.com/referral-codes"),
+          authAxios.get(`/cards/${cardId}`).catch((err) => {
+            throw new Error(`Lỗi khi lấy dữ liệu thẻ: ${err.message}`);
+          }),
+          authAxios
+            .get("https://apicard.namident.com/services")
+            .catch((err) => {
+              throw new Error(`Lỗi khi lấy dữ liệu dịch vụ: ${err.message}`);
+            }),
+          authAxios
+            .get("https://apicard.namident.com/partners")
+            .catch((err) => {
+              throw new Error(`Lỗi khi lấy dữ liệu đối tác: ${err.message}`);
+            }),
+          authAxios
+            .get("https://apicard.namident.com/referral-codes")
+            .catch((err) => {
+              throw new Error(
+                `Lỗi khi lấy dữ liệu mã giới thiệu: ${err.message}`
+              );
+            }),
         ]);
         setCard(cardResponse.data);
         setServices(servicesResponse.data);
         setPartners(partnersResponse.data);
         setReferralCodes(referralCodesResponse.data);
-      } catch {
-        // Không hiển thị lỗi ở đây, để CardForm xử lý
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Lỗi khi tải dữ liệu";
+        setError(errorMessage);
       } finally {
         setLoadingData(false);
       }
@@ -76,10 +99,14 @@ export default function EditCardPage() {
 
   const handleSubmitAction = async (data: Card, token?: string) => {
     setLoading(true);
+    setError(null);
     try {
       await updateCardAction(cardId, data, token);
       router.push("/dashboard/cards");
-    } finally {
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Lỗi khi cập nhật thẻ";
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -88,12 +115,27 @@ export default function EditCardPage() {
     return <div className="p-6 text-center">Đang tải dữ liệu...</div>;
   }
 
+  if (error) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <button
+          onClick={() => router.push("/dashboard/cards")}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Quay lại
+        </button>
+      </div>
+    );
+  }
+
   if (!card) {
     return <div className="p-6 text-center">Không tìm thấy thẻ</div>;
   }
 
   return (
     <div className="p-6 bg-gray-50">
+      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
       <h1 className="text-2xl font-bold mb-4 text-foreground text-center">
         Cập nhật thẻ
       </h1>
