@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { authAxios } from "@/components/AuthAxios";
 import CardForm from "@/components/CardForm";
 import { updateCardAction } from "@/actions/cardActions";
+import { checkTokenAndRedirect } from "@/utils/auth";
 
 interface Card {
   code: string;
@@ -43,28 +44,7 @@ export default function EditCardPage() {
 
   // Kiểm tra token khi component mount
   useEffect(() => {
-    const checkToken = async () => {
-      const token = document.cookie
-        .split("; ")
-        .find((cookie) => cookie.startsWith("token="))
-        ?.split("=")[1];
-
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      try {
-        // Gọi API để kiểm tra token
-        await authAxios.get("https://apicard.namident.com/auth/verify-token");
-      } catch (error) {
-        // Nếu token không hợp lệ, xóa cookie và chuyển hướng
-        document.cookie = "token=; max-age=-1; path=/";
-        router.push("/login");
-      }
-    };
-
-    checkToken();
+    checkTokenAndRedirect(router);
   }, [router]);
 
   useEffect(() => {

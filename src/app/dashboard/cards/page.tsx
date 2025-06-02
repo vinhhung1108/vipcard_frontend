@@ -1,10 +1,11 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@nextui-org/react";
 import FetchCards from "@/components/FetchCards";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { checkTokenAndRedirect } from "@/utils/auth";
 
 interface Card {
   id: string;
@@ -30,6 +31,15 @@ export default function CardsPage() {
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Kiểm tra token khi component mount
+  useEffect(() => {
+    const verifyToken = async () => {
+      await checkTokenAndRedirect(router);
+      setLoading(false); // Chỉ setLoading sau khi kiểm tra token xong
+    };
+    verifyToken();
+  }, [router]);
 
   const handleData = useCallback(
     (

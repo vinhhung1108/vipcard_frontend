@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -16,16 +15,24 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      // Gọi API để kiểm tra token
-      await axios.get("https://apicard.namident.com/auth/verify-token", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Gọi API để kiểm tra token bằng fetch
+      const response = await fetch(
+        "https://apicard.namident.com/auth/verify-token",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Token không hợp lệ");
+      }
 
       // Token hợp lệ, tiếp tục cho phép truy cập
       return NextResponse.next();
-    } catch (error) {
+    } catch {
       // Nếu token không hợp lệ (hết hạn hoặc lỗi), xóa cookie và chuyển hướng
       const response = NextResponse.redirect(new URL("/login", request.url));
       response.cookies.set("token", "", { maxAge: -1 }); // Xóa cookie

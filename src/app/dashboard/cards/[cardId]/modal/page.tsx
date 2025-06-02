@@ -5,7 +5,8 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Spinner } from "@nextui-org/react";
 import { authAxios, isAxiosError } from "@/components/AuthAxios";
-import { AxiosError } from "axios"; // Import AxiosError để kiểu hóa
+import { AxiosError } from "axios";
+import { checkTokenAndRedirect } from "@/utils/auth";
 
 interface Card {
   id: string;
@@ -35,28 +36,7 @@ export default function CardModal() {
 
   // Kiểm tra token khi component mount
   useEffect(() => {
-    const checkToken = async () => {
-      const token = document.cookie
-        .split("; ")
-        .find((cookie) => cookie.startsWith("token="))
-        ?.split("=")[1];
-
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      try {
-        // Gọi API để kiểm tra token
-        await authAxios.get("https://apicard.namident.com/auth/verify-token");
-      } catch (error) {
-        // Nếu token không hợp lệ, xóa cookie và chuyển hướng
-        document.cookie = "token=; max-age=-1; path=/";
-        router.push("/login");
-      }
-    };
-
-    checkToken();
+    checkTokenAndRedirect(router);
   }, [router]);
 
   useEffect(() => {
@@ -71,7 +51,7 @@ export default function CardModal() {
       } catch (err: unknown) {
         let errorMessage = "Lỗi khi tải chi tiết thẻ: ";
         if (isAxiosError(err)) {
-          const axiosError = err as AxiosError<{ message?: string }>; // Ép kiểu AxiosError với data có message tùy chọn
+          const axiosError = err as AxiosError<{ message?: string }>;
           errorMessage +=
             (axiosError.response?.data?.message as string | undefined) ||
             axiosError.message ||
@@ -112,7 +92,7 @@ export default function CardModal() {
       } catch (error: unknown) {
         let errorMessage = "Lỗi khi xóa thẻ: ";
         if (isAxiosError(error)) {
-          const axiosError = error as AxiosError<{ message?: string }>; // Ép kiểu AxiosError với data có message tùy chọn
+          const axiosError = error as AxiosError<{ message?: string }>;
           errorMessage +=
             (axiosError.response?.data?.message as string | undefined) ||
             axiosError.message ||
