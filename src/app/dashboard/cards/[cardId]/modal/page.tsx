@@ -33,6 +33,32 @@ export default function CardModal() {
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Kiểm tra token khi component mount
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = document.cookie
+        .split("; ")
+        .find((cookie) => cookie.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        // Gọi API để kiểm tra token
+        await authAxios.get("https://apicard.namident.com/auth/verify-token");
+      } catch (error) {
+        // Nếu token không hợp lệ, xóa cookie và chuyển hướng
+        document.cookie = "token=; max-age=-1; path=/";
+        router.push("/login");
+      }
+    };
+
+    checkToken();
+  }, [router]);
+
   useEffect(() => {
     const fetchCard = async () => {
       try {
