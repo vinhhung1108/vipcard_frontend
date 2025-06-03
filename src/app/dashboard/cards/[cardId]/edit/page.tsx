@@ -101,8 +101,15 @@ export default function EditCardPage() {
     setLoading(true);
     setError(null);
     try {
-      // Loại bỏ trường 'code' khỏi payload trước khi gửi mà không khai báo biến code
-      const { code: _, ...updateData } = data;
+      // Tạo payload mới mà không bao gồm 'code'
+      const updateData: Omit<Card, "code"> = {
+        value: data.value,
+        remainingValue: data.remainingValue,
+        expiredAt: data.expiredAt,
+        serviceIds: data.serviceIds,
+        partnerIds: data.partnerIds,
+        referralCodeId: data.referralCodeId,
+      };
       await updateCardAction(cardId, updateData, token);
       router.push("/dashboard/cards");
     } catch (err: unknown) {
