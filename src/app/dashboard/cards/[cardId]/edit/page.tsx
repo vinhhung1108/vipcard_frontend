@@ -101,8 +101,8 @@ export default function EditCardPage() {
     setLoading(true);
     setError(null);
     try {
-      // Loại bỏ trường 'code' khỏi payload trước khi gửi
-      const { code, ...updateData } = data;
+      // Loại bỏ trường 'code' khỏi payload trước khi gửi mà không khai báo biến code
+      const { code: _, ...updateData } = data;
       await updateCardAction(cardId, updateData, token);
       router.push("/dashboard/cards");
     } catch (err: unknown) {
