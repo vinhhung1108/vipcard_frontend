@@ -11,6 +11,14 @@ interface Card {
   partnerIds: number[];
   referralCodeId?: number | null;
 }
+interface CardEdit {
+  value: number;
+  remainingValue: number;
+  expiredAt: string;
+  serviceIds: number[];
+  partnerIds: number[];
+  referralCodeId?: number | null;
+}
 
 export async function createCardAction(data: Card, token?: string) {
   try {
@@ -29,7 +37,7 @@ export async function createCardAction(data: Card, token?: string) {
 
 export async function updateCardAction(
   cardId: string,
-  data: Card,
+  data: CardEdit,
   token?: string
 ) {
   try {
