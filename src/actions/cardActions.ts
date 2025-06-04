@@ -6,17 +6,17 @@ interface Card {
   code: string;
   value: number;
   remainingValue: number;
-  expiredAt: string;
-  serviceIds: number[];
-  partnerIds: number[];
+  expiredAt: string | Date | null;
+  serviceIds: number[] | null;
+  partnerIds: number[] | null;
   referralCodeId?: number | null;
 }
 interface CardEdit {
   value: number;
   remainingValue: number;
-  expiredAt: string;
-  serviceIds: number[];
-  partnerIds: number[];
+  expiredAt: string | Date | null;
+  serviceIds: number[] | null;
+  partnerIds: number[] | null;
   referralCodeId?: number | null;
 }
 

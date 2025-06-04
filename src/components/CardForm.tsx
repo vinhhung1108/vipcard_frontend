@@ -8,9 +8,9 @@ interface Card {
   code: string;
   value: number;
   remainingValue: number;
-  expiredAt: string;
-  serviceIds: number[];
-  partnerIds: number[];
+  expiredAt: string | Date | null;
+  serviceIds: number[] | null;
+  partnerIds: number[] | null;
   referralCodeId?: number | null;
 }
 
@@ -216,7 +216,7 @@ export default function CardForm({
           <label className="block text-foreground">Dịch vụ</label>
           <select
             multiple
-            value={formData.serviceIds.map(String)}
+            value={formData.serviceIds?.map(String)}
             onChange={(e) =>
               handleSelectChange(
                 "serviceIds",
@@ -238,7 +238,7 @@ export default function CardForm({
           <label className="block text-foreground">Đối tác</label>
           <select
             multiple
-            value={formData.partnerIds.map(String)}
+            value={formData.partnerIds?.map(String)}
             onChange={(e) =>
               handleSelectChange(
                 "partnerIds",

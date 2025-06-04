@@ -10,9 +10,9 @@ interface Card {
   code: string;
   value: number;
   remainingValue: number;
-  expiredAt: string;
-  serviceIds: number[];
-  partnerIds: number[];
+  expiredAt: string | Date | null;
+  serviceIds: number[] | null;
+  partnerIds: number[] | null;
   referralCodeId?: number | null;
 }
 
@@ -43,7 +43,6 @@ export default function EditCardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Kiểm tra token khi component mount
   useEffect(() => {
     const verifyToken = async () => {
       await checkTokenAndRedirect(router);
@@ -101,20 +100,37 @@ export default function EditCardPage() {
     setLoading(true);
     setError(null);
     try {
-      // Tạo payload mới mà không bao gồm 'code'
+      if (data.expiredAt === null || data.expiredAt === undefined) {
+        throw new Error("expiredAt không được để trống");
+      }
       const updateData: Omit<Card, "code"> = {
         value: data.value,
         remainingValue: data.remainingValue,
-        expiredAt: data.expiredAt,
-        serviceIds: data.serviceIds,
-        partnerIds: data.partnerIds,
-        referralCodeId: data.referralCodeId,
+        expiredAt:
+          data.expiredAt instanceof Date
+            ? data.expiredAt.toISOString()
+            : String(data.expiredAt),
+        serviceIds:
+          Array.isArray(data.serviceIds) && data.serviceIds.length > 0
+            ? data.serviceIds
+            : null,
+        partnerIds:
+          Array.isArray(data.partnerIds) && data.partnerIds.length > 0
+            ? data.partnerIds
+            : null,
+        referralCodeId:
+          typeof data.referralCodeId === "number" ? data.referralCodeId : null,
       };
+      console.log(
+        "Payload gửi từ frontend:",
+        JSON.stringify(updateData, null, 2)
+      );
       await updateCardAction(cardId, updateData, token);
       router.push("/dashboard/cards");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Lỗi khi cập nhật thẻ";
+      console.error("Lỗi khi gửi yêu cầu cập nhật:", errorMessage);
       setError(errorMessage);
       setLoading(false);
     }
