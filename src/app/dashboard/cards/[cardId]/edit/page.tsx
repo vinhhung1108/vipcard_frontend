@@ -131,7 +131,12 @@ export default function EditCardPage() {
       const errorMessage =
         err instanceof Error ? err.message : "Lỗi khi cập nhật thẻ";
       console.error("Lỗi khi gửi yêu cầu cập nhật:", errorMessage);
-      setError(errorMessage);
+      if (errorMessage.includes("401")) {
+        setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        router.push("/login");
+      } else {
+        setError(errorMessage);
+      }
       setLoading(false);
     }
   };
