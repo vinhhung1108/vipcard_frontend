@@ -100,43 +100,51 @@ export default function EditCardPage() {
     setLoading(true);
     setError(null);
     try {
-      if (data.expiredAt === null || data.expiredAt === undefined) {
-        throw new Error("expiredAt không được để trống");
+      if (data.expiredAt == null) {
+        setError("expiredAt không được để trống");
+        setLoading(false);
+        return;
       }
-      const updateData: Omit<Card, "code"> = {
+
+      const updateData: Omit<Card, "code"> & { expiredAt: string | Date } = {
         value: data.value,
         remainingValue: data.remainingValue,
         expiredAt:
           data.expiredAt instanceof Date
             ? data.expiredAt.toISOString()
             : String(data.expiredAt),
-        serviceIds:
-          Array.isArray(data.serviceIds) && data.serviceIds.length > 0
-            ? data.serviceIds
-            : [],
-        partnerIds:
-          Array.isArray(data.partnerIds) && data.partnerIds.length > 0
-            ? data.partnerIds
-            : [],
+        serviceIds: Array.isArray(data.serviceIds) ? data.serviceIds : [],
+        partnerIds: Array.isArray(data.partnerIds) ? data.partnerIds : [],
         referralCodeId:
           typeof data.referralCodeId === "number" ? data.referralCodeId : null,
       };
+
       console.log(
         "Payload gửi từ frontend:",
         JSON.stringify(updateData, null, 2)
       );
-      await updateCardAction(cardId, updateData, token);
+
+      const result = await updateCardAction(cardId, updateData, token);
+
+      if (!result.ok) {
+        const msg =
+          result.message ||
+          (typeof result.error === "string"
+            ? result.error
+            : result.error?.message) ||
+          "Cập nhật thất bại";
+        setError(msg);
+        setLoading(false);
+        return;
+      }
+
+      // Thành công
       router.push("/dashboard/cards");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Lỗi khi cập nhật thẻ";
       console.error("Lỗi khi gửi yêu cầu cập nhật:", errorMessage);
-      if (errorMessage.includes("401")) {
-        setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        router.push("/login");
-      } else {
-        setError(errorMessage);
-      }
+      setError(errorMessage);
       setLoading(false);
     }
   };
