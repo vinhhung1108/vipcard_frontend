@@ -113,11 +113,11 @@ export default function EditCardPage() {
         serviceIds:
           Array.isArray(data.serviceIds) && data.serviceIds.length > 0
             ? data.serviceIds
-            : null,
+            : [],
         partnerIds:
           Array.isArray(data.partnerIds) && data.partnerIds.length > 0
             ? data.partnerIds
-            : null,
+            : [],
         referralCodeId:
           typeof data.referralCodeId === "number" ? data.referralCodeId : null,
       };
