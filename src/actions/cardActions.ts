@@ -1,8 +1,8 @@
 "use server";
 
-import { authAxios } from "@/components/AuthAxios";
 import { cookies } from "next/headers";
 
+/** ==== Types ==== */
 interface Card {
   code: string;
   value: number;
@@ -11,29 +11,6 @@ interface Card {
   serviceIds: number[] | null;
   partnerIds: number[] | null;
   referralCodeId?: number | null;
-}
-interface CardEdit {
-  value: number;
-  remainingValue: number;
-  expiredAt: string | Date | null;
-  serviceIds: number[] | null;
-  partnerIds: number[] | null;
-  referralCodeId?: number | null;
-}
-
-export async function createCardAction(data: Card, token?: string) {
-  try {
-    console.log("Payload gửi lên API (createCardAction):", data);
-    const config = token ? { headers: { "X-Authorization-Token": token } } : {};
-    const response = await authAxios.post("/cards", data, config);
-    console.log("Phản hồi từ API (createCardAction):", response.data);
-    return response.data;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      throw new Error(error.message || "Lỗi khi tạo thẻ");
-    }
-    throw new Error("Lỗi không xác định khi tạo thẻ");
-  }
 }
 
 type UpdateCardPayload = {
@@ -45,31 +22,70 @@ type UpdateCardPayload = {
   referralCodeId?: number | null;
 };
 
-type ActionOk = { ok: true; data: any };
-type ActionErr = { ok: false; status: number; error: any; message?: string };
+type ActionOk = { ok: true; data: unknown };
+type ActionErr = {
+  ok: false;
+  status: number;
+  error: unknown;
+  message?: string;
+};
 export type ActionResult = ActionOk | ActionErr;
 
-export async function updateCardAction(
-  cardId: string | number,
-  data: UpdateCardPayload,
+/** ==== Constants ==== */
+const API_BASE = process.env.API_URL ?? "https://apicard.namident.com";
+
+/** ==== Utils ==== */
+interface CookieStore {
+  get: (name: string) => { name: string; value: string } | undefined;
+}
+type MaybePromise<T> = T | Promise<T>;
+type CookiesFn = () => MaybePromise<CookieStore>;
+
+async function getCookieValue(name: string): Promise<string | undefined> {
+  // Hỗ trợ cả trường hợp cookies() trả sync hoặc Promise (tùy version Next)
+  const cookiesFn = cookies as unknown as CookiesFn;
+  const jar = (await cookiesFn()) as CookieStore;
+  return jar.get(name)?.value;
+}
+
+function toIsoString(input: string | Date): string {
+  if (input instanceof Date) return input.toISOString();
+  const d = new Date(String(input));
+  return d.toISOString();
+}
+
+function buildAuthHeaders(token?: string): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    // Giữ tương thích nếu backend đang đọc header phụ này
+    headers["X-Authorization-Token"] = token;
+  }
+  return headers;
+}
+
+function safeParseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+/** ==== Actions ==== */
+export async function createCardAction(
+  data: Card,
   tokenFromClient?: string
 ): Promise<ActionResult> {
-  const apiBase = process.env.API_URL ?? "https://apicard.namident.com";
-
-  // Lấy token: ưu tiên tham số, sau đó cookie, cuối cùng là env (nếu dùng service token)
   const token =
-    tokenFromClient ??
-    (await cookies()).get("token")?.value ??
-    process.env.API_TOKEN;
+    tokenFromClient ?? (await getCookieValue("token")) ?? process.env.API_TOKEN;
 
-  // Chuẩn hoá payload: không để null cho mảng, ISO cho ngày
-  const payload: Record<string, any> = {
-    value: Number(data.value),
-    remainingValue: Number(data.remainingValue),
+  const payload = {
+    ...data,
     expiredAt:
       data.expiredAt instanceof Date
         ? data.expiredAt.toISOString()
-        : new Date(String(data.expiredAt)).toISOString(),
+        : data.expiredAt,
     serviceIds: Array.isArray(data.serviceIds) ? data.serviceIds : [],
     partnerIds: Array.isArray(data.partnerIds) ? data.partnerIds : [],
     referralCodeId:
@@ -77,31 +93,67 @@ export async function updateCardAction(
   };
 
   try {
-    const res = await fetch(`${apiBase}/cards/${cardId}`, {
-      method: "PATCH",
+    const res = await fetch(`${API_BASE}/cards`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...buildAuthHeaders(token),
       },
       body: JSON.stringify(payload),
       cache: "no-store",
     });
 
-    const text = await res.text(); // đọc text để log/parse
+    const text = await res.text();
     if (!res.ok) {
-      let error: any = text;
-      try {
-        error = JSON.parse(text);
-      } catch {}
-      // KHÔNG throw: trả về object lỗi để client xử lý, tránh RSC crash
-      return { ok: false, status: res.status, error };
+      return { ok: false, status: res.status, error: safeParseJson(text) };
     }
+    return { ok: true, data: text ? safeParseJson(text) : null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, status: 500, error: msg, message: msg };
+  }
+}
 
-    const json = text ? JSON.parse(text) : null;
-    return { ok: true, data: json };
-  } catch (e: any) {
-    // Lỗi mạng/TLS/DNS… vào đây; vẫn KHÔNG throw
-    console.error("updateCardAction failed:", e);
-    return { ok: false, status: 500, error: String(e?.message || e) };
+export async function updateCardAction(
+  cardId: string | number,
+  data: UpdateCardPayload,
+  tokenFromClient?: string
+): Promise<ActionResult> {
+  const token =
+    tokenFromClient ?? (await getCookieValue("token")) ?? process.env.API_TOKEN;
+
+  const payload = {
+    value: Number(data.value),
+    remainingValue: Number(data.remainingValue),
+    expiredAt: toIsoString(data.expiredAt),
+    serviceIds: Array.isArray(data.serviceIds) ? data.serviceIds : [],
+    partnerIds: Array.isArray(data.partnerIds) ? data.partnerIds : [],
+    referralCodeId:
+      typeof data.referralCodeId === "number" ? data.referralCodeId : null,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/cards/${cardId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...buildAuthHeaders(token),
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      return { ok: false, status: res.status, error: safeParseJson(text) };
+    }
+    return { ok: true, data: text ? safeParseJson(text) : null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.error("updateCardAction failed:", e);
+    }
+    return { ok: false, status: 500, error: msg, message: msg };
   }
 }
